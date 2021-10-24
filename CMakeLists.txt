@@ -12,8 +12,14 @@ set(HEADER_LIST
         "${assign1_SOURCE_DIR}/include/common.h"
         )
 
-set(SOURCE_LIST
+set(COMMON_SOURCE_LIST
         "${assign1_SOURCE_DIR}/src/common.c"
+        )
+
+set(TO_MORSE_SOURCE_LIST
+        )
+
+set(TO_ASCII_SOURCE_LIST
         )
 
 set(TO_MORSE_MAIN_SOURCE

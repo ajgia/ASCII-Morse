@@ -10,8 +10,8 @@ IF (LINT)
 ENDIF ()
 
 # Make an executable
-add_executable(ascii_to_morse ${SOURCE_LIST} ${TO_MORSE_MAIN_SOURCE} ${HEADER_LIST})
-add_executable(morse_to_ascii ${SOURCE_LIST} ${TO_ASCII_MAIN_SOURCE} ${HEADER_LIST})
+add_executable(ascii_to_morse ${COMMON_SOURCE_LIST} ${TO_MORSE_SOURCE_LIST} ${TO_MORSE_MAIN_SOURCE} ${HEADER_LIST})
+add_executable(morse_to_ascii ${COMMON_SOURCE_LIST} ${TO_ASCII_SOURCE_LIST} ${TO_ASCII_MAIN_SOURCE} ${HEADER_LIST})
 
 # We need this directory, and users of our library will need it too
 target_include_directories(ascii_to_morse PRIVATE ../include)
@@ -39,19 +39,32 @@ target_compile_options(morse_to_ascii PRIVATE -Wdouble-promotion -Wformat-nonlit
 
 
 find_library(LIBM m REQUIRED)
+find_library(LIBSOCKET socket)
 find_library(LIBDC_ERROR dc_error REQUIRED)
 find_library(LIBDC_POSIX dc_posix REQUIRED)
+find_library(LIBDC_UTIL dc_util REQUIRED)
+find_library(LIBDC_FSM dc_fsm REQUIRED)
+find_library(LIBDC_APPLICATION dc_application REQUIRED)
+
 target_link_libraries(ascii_to_morse PRIVATE ${LIBM})
 target_link_libraries(ascii_to_morse PRIVATE ${LIBDC_ERROR})
 target_link_libraries(ascii_to_morse PRIVATE ${LIBDC_POSIX})
+target_link_libraries(ascii_to_morse PRIVATE ${LIBDC_FSM})
+target_link_libraries(ascii_to_morse PRIVATE ${LIBDC_APPLICATION})
+target_link_libraries(ascii_to_morse PRIVATE ${LIBDC_UTIL})
+
 target_link_libraries(morse_to_ascii PRIVATE ${LIBM})
 target_link_libraries(morse_to_ascii PRIVATE ${LIBDC_ERROR})
 target_link_libraries(morse_to_ascii PRIVATE ${LIBDC_POSIX})
+target_link_libraries(morse_to_ascii PRIVATE ${LIBDC_FSM})
+target_link_libraries(morse_to_ascii PRIVATE ${LIBDC_APPLICATION})
+target_link_libraries(morse_to_ascii PRIVATE ${LIBDC_UTIL})
 
 
 set_target_properties(ascii_to_morse PROPERTIES OUTPUT_NAME "ascii_to_morse")
 set_target_properties(morse_to_ascii PROPERTIES OUTPUT_NAME "morse_to_ascii")
-
+install(TARGETS ascii_to_morse DESTINATION bin)
+install(TARGETS morse_to_ascii DESTINATION bin)
 
 # IDEs should put the headers in a nice place
 source_group(
