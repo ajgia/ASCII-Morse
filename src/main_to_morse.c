@@ -164,17 +164,23 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     struct application_settings *app_settings;
     int ret_val;
     DC_TRACE(env);
-    char dest[BUF_SIZE];
+    char chars[BUF_SIZE];
     char * output;
 
     ret_val = EXIT_SUCCESS;
     app_settings = (struct application_settings *)settings;
 
 
-    readInput(env, err, dest);
-    convertToMorse(env, err, dest, output);
+    readInput(env, err, chars);
+    convertToMorse(env, err, chars, output);
     writeToFile(env, err, output);
-    
+
+    // Prints out a letter's members
+    // printf("%c, %d\n", alphabet[0].c, alphabet[0].sequenceLength);
+    // for(size_t i = 0; i < alphabet[0].sequenceLength; i++) {
+    //     printf("%d\n", *((alphabet[0].sequence)+i));
+    // }
+
     return ret_val;
 }
 
@@ -193,12 +199,12 @@ static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err,
     
     printf("%s", input);
 }
+
 static void writeToFile(const struct dc_posix_env *env, struct dc_error *err, char *output) {
 
     display("write");
 
 }
-
 
 static void error_reporter(const struct dc_error *err) {
     fprintf(stderr, "ERROR: %s : %s : @ %zu : %d\n", err->file_name, err->function_name, err->line_number, 0);

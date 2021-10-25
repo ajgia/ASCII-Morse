@@ -1,6 +1,9 @@
 #ifndef TEMPLATE_COMMON_H
 #define TEMPLATE_COMMON_H
 
+#include <stdio.h>
+#include <stdbool.h>
+
 /*
  * This file is part of dc_dump.
  *
@@ -25,5 +28,76 @@
  * @return a return value to be documented.
  */
 int display(const char *str);
+
+/**
+ * Defines a letter with both ASCII value and morse value represented as a bool array
+ * Bool array: dot = true, dash = false
+ */ 
+typedef struct letter {
+    char c;
+    bool sequence[15];
+    size_t length;
+} letter;
+
+static letter alphabet[26 + 10 + 18] = {
+    { .c = 'A', .sequence = {1, 0}, .length = 2},
+    { .c = 'B', .sequence = {0,1,1,1}, .length = 4},
+    { .c = 'C', .sequence = {0,1,0,1}, .length = 4},
+    { .c = 'D', .sequence = {0,1,1}, .length = 3},
+    { .c = 'E', .sequence = {1}, .length = 1},
+    { .c = 'F', .sequence = {1,1,0,1}, .length = 4},
+    { .c = 'G', .sequence = {0,0,1}, .length = 3},
+    { .c = 'H', .sequence = {1,1,1,1}, .length = 4},
+    { .c = 'I', .sequence = {1,1}, .length = 2},
+    { .c = 'J', .sequence = {1,0,0,0}, .length = 4},
+    { .c = 'K', .sequence = {0,1,0}, .length = 3},
+    { .c = 'L', .sequence = {1,0,1,1}, .length = 4},
+    { .c = 'M', .sequence = {0,0}, .length = 2},
+    { .c = 'N', .sequence = {0,1}, .length = 2},
+    { .c = 'O', .sequence = {0,0,0}, .length = 3},
+    { .c = 'P', .sequence = {1,0,0,1}, .length = 4},
+    { .c = 'Q', .sequence = {0,0,1,0}, .length = 4},
+    { .c = 'R', .sequence = {1,0,1}, .length = 3},
+    { .c = 'S', .sequence = {1,1,1}, .length = 3},
+    { .c = 'T', .sequence = {0}, .length = 1},
+    { .c = 'U', .sequence = {1,1,0}, .length = 3},
+    { .c = 'V', .sequence = {1,1,1,0}, .length = 4},
+    { .c = 'W', .sequence = {1,0,0}, .length = 3},
+    { .c = 'X', .sequence = {0,1,1,0}, .length = 4},
+    { .c = 'Y', .sequence = {0,1,0,0}, .length = 4},
+    { .c = 'Z', .sequence = {0,0,1,1}, .length = 4},
+
+    { .c = '0', .sequence = {0,0,0,0,0}, .length = 5},
+    { .c = '1', .sequence = {1,0,0,0,0}, .length = 5},
+    { .c = '2', .sequence = {1,1,0,0,0}, .length = 5},
+    { .c = '3', .sequence = {1,1,1,0,0}, .length = 5},
+    { .c = '4', .sequence = {1,1,1,1,0}, .length = 5},
+    { .c = '5', .sequence = {1,1,1,1,1}, .length = 5},
+    { .c = '6', .sequence = {0,1,1,1,1}, .length = 5},
+    { .c = '7', .sequence = {0,0,1,1,1}, .length = 5},
+    { .c = '8', .sequence = {0,0,0,1,1}, .length = 5},
+    { .c = '9', .sequence = {0,0,0,0,1}, .length = 5},
+
+// Error punctuation. Skipped
+    { .c = '&', .sequence = {1,0,1,1,1}, .length = 5},
+    { .c = '\'', .sequence = {1,0,0,0,0,1}, .length = 6},
+    { .c = '@', .sequence = {1,0,0,1,0,1}, .length = 6},
+    { .c = ')', .sequence = {0,1,0,0,1,0}, .length = 6},
+    { .c = '(', .sequence = {0,1,0,0,1}, .length = 5},
+    { .c = ':', .sequence = {0,0,0,1,1,1}, .length = 6},
+    { .c = ',', .sequence = {0,0,1,1,0,0}, .length = 6},
+    { .c = '=', .sequence = {0,1,1,1,0}, .length = 5},
+    { .c = '!', .sequence = {0,1,0,1,0,0}, .length = 6},
+    { .c = '.', .sequence = {1,0,1,0,1,0}, .length = 6},
+    { .c = '-', .sequence = {0,1,1,1,1,0}, .length = 6},
+ // Is the same as 'X'   { .c = '*', .sequence = {0,1,1,0}, .length = 4},
+    { .c = '%', .sequence = {0,0,0,0,0, 0,1,1,0,1, 0,0,0,0,0}, .length = 15},
+    { .c = '+', .sequence = {1,0,1,0,1}, .length = 5},
+    { .c = '\"', .sequence = {1,0,1,1,0,1}, .length = 6},
+    { .c = '\?', .sequence = {1,1,0,0,1,1}, .length = 6},
+    { .c = '/', .sequence = {0,1,1,0,1}, .length = 5}
+};
+
+
 
 #endif // TEMPLATE_COMMON_H
