@@ -56,162 +56,150 @@ static const uint8_t masks_8[] = {
     MASK_10000000
 };
 
-static void error_reporter(const struct dc_error *err);
-static void trace_reporter(const struct dc_posix_env *env, const char *file_name,
-                           const char *function_name, size_t line_number);
-static void will_change_state(const struct dc_posix_env *env,
-                struct dc_error *err,
-                const struct dc_fsm_info *info,
-                int from_state_id,
-                int to_state_id);
-static void did_change_state(const struct dc_posix_env *env,
-                         struct dc_error *err,
-                         const struct dc_fsm_info *info,
-                         int from_state_id,
-                         int to_state_id,
-                         int next_id);
-static void bad_change_state(const struct dc_posix_env *env,
-                         struct dc_error *err,
-                         const struct dc_fsm_info *info,
-                         int from_state_id,
-                         int to_state_id);
-static int state_error(const struct dc_posix_env *env, struct dc_error *err, void *arg);
-
-static int readInput(const struct dc_posix_env *env, struct dc_error *err);
-static int convertToMorse(const struct dc_posix_env *env, struct dc_error *err, void *arg);
-static int writeToFile(const struct dc_posix_env *env, struct dc_error *err, void *arg);
-
-
-enum application_states
+struct application_settings
 {
-    CONVERT = DC_FSM_USER_START,    // 2
-    WRITE,
-    ERROR,
+    struct dc_opt_settings opts;
+    struct dc_setting_string *parity;
+    struct dc_setting_string *prefix;
 };
 
-int main()
+static struct dc_application_settings *create_settings( const struct dc_posix_env *env,
+                                                        struct dc_error *err);
+
+static int destroy_settings(const struct dc_posix_env *env,
+                            struct dc_error *err,
+                            struct dc_application_settings **psettings);
+static int run( const struct dc_posix_env *env,
+                struct dc_error *err,
+                struct dc_application_settings *settings);
+static void error_reporter(const struct dc_error *err);
+static void trace_reporter(const struct dc_posix_env *env,
+                          const char *file_name,
+                          const char *function_name,
+                          size_t line_number);
+static int readInput(const struct dc_posix_env *env, struct dc_error *err);
+static int convertToMorse(const struct dc_posix_env *env, struct dc_error *err);
+static int writeToFile(const struct dc_posix_env *env, struct dc_error *err);
+
+
+int main(int argc, char * argv[])
 {
-    struct dc_error err;
+    dc_posix_tracer tracer;
+    dc_error_reporter reporter;
     struct dc_posix_env env;
+    struct dc_error err;
+    struct dc_application_info *info;
     int ret_val;
-    struct dc_fsm_info *fsm_info;
-    static struct dc_fsm_transition transitions[] = {
-            {DC_FSM_INIT,   CONVERT,           convertToMorse},
-            {CONVERT,       WRITE,          writeToFile},
-            {WRITE,         DC_FSM_EXIT,    NULL},
-            {CONVERT,       ERROR,          state_error},
-            {WRITE,         ERROR,          state_error},
-            {ERROR,         DC_FSM_EXIT,    NULL}
-    };
 
-    dc_error_init(&err, error_reporter);
-    dc_posix_env_init(&env, NULL /*trace_reporter*/);
-    ret_val = EXIT_SUCCESS;
-    fsm_info = dc_fsm_info_create(&env, &err, "toMorse");
-//    dc_fsm_info_set_will_change_state(fsm_info, will_change_state);
-//    dc_fsm_info_set_did_change_state(fsm_info, did_change_state);
-//    dc_fsm_info_set_bad_change_state(fsm_info, bad_change_state);
-
-
-    // Need to read in the word before starting the FSM so we can pass it around as an argument between states
-    // FSM seems to require any arguments be present when starting it.
-    ssize_t nread;
-    char chars[BUF_SIZE];
-    char** ptr;
-
-    if (dc_error_has_no_error(&err)) {
-        while ( (nread = dc_read(&env, &err, STDIN_FILENO, chars, BUF_SIZE)) > 0) {
-            
-            if (dc_error_has_error(&err)) {
-                ret_val = 1;
-            }
-
-            dc_write(&env, &err, STDOUT_FILENO, chars, (size_t)nread);
-        }
-        ptr = &chars;
-    }
-
-    // Start FSM
-    if(dc_error_has_no_error(&err))
-    {
-        int from_state;
-        int to_state;
-
-        ret_val = dc_fsm_run(&env, &err, fsm_info, &from_state, &to_state, ptr, transitions);
-        dc_fsm_info_destroy(&env, &fsm_info);
-    }
-
+    reporter = error_reporter;
+    tracer = NULL;
+    // tracer = trace_reporter;
+    dc_error_init(&err, reporter);
+    dc_posix_env_init(&env, tracer);
+    info = dc_application_info_create(&env, &err, "To Morse Application");
+    ret_val = dc_application_run(&env, &err, info, create_settings, destroy_settings, run, dc_default_create_lifecycle, dc_default_destroy_lifecycle, NULL, argc, argv);
+    dc_application_info_destroy(&env, &info);
+    dc_error_reset(&err);
     return ret_val;
 }
 
+static struct dc_application_settings *create_settings(const struct dc_posix_env *env, struct dc_error *err)
+{
+    static bool default_verbose = false;
+    struct application_settings *settings;
+
+    DC_TRACE(env);
+    settings = dc_malloc(env, err, sizeof(struct application_settings));
+
+    if(settings == NULL)
+    {
+        return NULL;
+    }
+
+    settings->opts.parent.config_path = dc_setting_path_create(env, err);
+
+    struct options opts[] = {
+            {(struct dc_setting *)settings->opts.parent.config_path,
+                    dc_options_set_path,
+                    "config",
+                    required_argument,
+                    'c',
+                    "CONFIG",
+                    dc_string_from_string,
+                    NULL,
+                    dc_string_from_config,
+                    NULL}
+    };
+
+    // note the trick here - we use calloc and add 1 to ensure the last line is all 0/NULL
+    settings->opts.opts_count = (sizeof(opts) / sizeof(struct options)) + 1;
+    settings->opts.opts_size = sizeof(struct options);
+    settings->opts.opts = dc_calloc(env, err, settings->opts.opts_count, settings->opts.opts_size);
+    dc_memcpy(env, settings->opts.opts, opts, sizeof(opts));
+    settings->opts.flags = "m:";
+    settings->opts.env_prefix = "DC_EXAMPLE_";
+
+    return (struct dc_application_settings *)settings;
+}
+
+static int destroy_settings(const struct dc_posix_env *env,
+                            __attribute__((unused)) struct dc_error *err,
+                            struct dc_application_settings **psettings) 
+{
+    struct application_settings *app_settings;
+
+    DC_TRACE(env);
+    app_settings = (struct application_settings *)*psettings;
+    dc_free(env, app_settings->opts.opts, app_settings->opts.opts_count);
+    dc_free(env, *psettings, sizeof(struct application_settings));
+
+    if(env->null_free)
+    {
+        *psettings = NULL;
+    }
+
+    return 0;
+}
+
+
+static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_application_settings *settings) {
+    struct application_settings *app_settings;
+    int ret_val;
+    DC_TRACE(env);
+
+    ret_val = EXIT_SUCCESS;
+
+    // Create settings
+    app_settings = (struct application_settings *)settings;
+
+
+}
+
+
+
+
+
 static int convertToMorse(const struct dc_posix_env *env, struct dc_error *err, void *arg) {
-    int next_state;
-    char *str;
-    char *other = "something else";
 
     display("convert");
     
-    str = (char * )arg;
-    printf("%s", str);
-    next_state = WRITE;
-    *(char*)arg = other;
-    return next_state;
+
 }
 static int writeToFile(const struct dc_posix_env *env, struct dc_error *err, void *arg) {
-    int next_state;
+
     display("write");
 
-    char * str;
-    str = (char*)arg;
-    printf("%s", str);
-    next_state = DC_FSM_EXIT;
-    return next_state;
 }
 
 
-static void error_reporter(const struct dc_error *err)
-{
-    fprintf(stderr, "Error: \"%s\" - %s : %s @ %zu\n", err->message, err->file_name, err->function_name, err->line_number);
+static void error_reporter(const struct dc_error *err) {
+    fprintf(stderr, "ERROR: %s : %s : @ %zu : %d\n", err->file_name, err->function_name, err->line_number, 0);
+    fprintf(stderr, "ERROR: %s\n", err->message);
 }
 
-static void trace_reporter(const struct dc_posix_env *env, const char *file_name,
-                           const char *function_name, size_t line_number)
-{
-    fprintf(stderr, "Entering: %s : %s @ %zu\n", file_name, function_name, line_number);
+static void trace_reporter(__attribute__((unused))  const struct dc_posix_env *env,
+                                                    const char *file_name,
+                                                    const char *function_name,
+                                                    size_t line_number) {
+    fprintf(stdout, "TRACE: %s : %s : @ %zu\n", file_name, function_name, line_number);
 }
-
-static void will_change_state(const struct dc_posix_env *env,
-                              struct dc_error *err,
-                              const struct dc_fsm_info *info,
-                              int from_state_id,
-                              int to_state_id)
-{
-    printf("%s: will change %d -> %d\n", dc_fsm_info_get_name(info), from_state_id, to_state_id);
-}
-
-static void did_change_state(const struct dc_posix_env *env,
-                             struct dc_error *err,
-                             const struct dc_fsm_info *info,
-                             int from_state_id,
-                             int to_state_id,
-                             int next_id)
-{
-    printf("%s: did change %d -> %d moving to %d\n", dc_fsm_info_get_name(info), from_state_id, to_state_id, next_id);
-}
-
-static void bad_change_state(const struct dc_posix_env *env,
-                             struct dc_error *err,
-                             const struct dc_fsm_info *info,
-                             int from_state_id,
-                             int to_state_id)
-{
-    printf("%s: bad change %d -> %d\n", dc_fsm_info_get_name(info), from_state_id, to_state_id);
-}
-
-static int state_error(const struct dc_posix_env *env, struct dc_error *err, void *arg)
-{
-    printf("ERROR\n");
-
-    return DC_FSM_EXIT;
-}
-
