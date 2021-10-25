@@ -4,6 +4,12 @@
  * A00982145 
 */
 
+// 00 - eoc
+// 01 - dash
+// 10 - dot
+// 11 - "\s"
+// 00 00 - eot
+
 #include "common.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,44 +34,26 @@
 #include <dc_fsm/fsm.h>
 #include <dc_posix/dc_time.h>
 
-
-
 #define BUF_SIZE 1024
 
-const uint16_t MASK_00000000_00000001 = UINT16_C(0x00000001);
-const uint16_t MASK_00000000_00000010 = UINT16_C(0x00000002);
-const uint16_t MASK_00000000_00000100 = UINT16_C(0x00000004);
-const uint16_t MASK_00000000_00001000 = UINT16_C(0x00000008);
-const uint16_t MASK_00000000_00010000 = UINT16_C(0x00000010);
-const uint16_t MASK_00000000_00100000 = UINT16_C(0x00000020);
-const uint16_t MASK_00000000_01000000 = UINT16_C(0x00000040);
-const uint16_t MASK_00000000_10000000 = UINT16_C(0x00000080);
-const uint16_t MASK_00000001_00000000 = UINT16_C(0x00000100);
-const uint16_t MASK_00000010_00000000 = UINT16_C(0x00000200);
-const uint16_t MASK_00000100_00000000 = UINT16_C(0x00000400);
-const uint16_t MASK_00001000_00000000 = UINT16_C(0x00000800);
-const uint16_t MASK_00010000_00000000 = UINT16_C(0x00001000);
-const uint16_t MASK_00100000_00000000 = UINT16_C(0x00002000);
-const uint16_t MASK_01000000_00000000 = UINT16_C(0x00004000);
-const uint16_t MASK_10000000_00000000 = UINT16_C(0x00008000);
+const uint8_t MASK_00000001 = UINT8_C(0x00000001);
+const uint8_t MASK_00000010 = UINT8_C(0x00000002);
+const uint8_t MASK_00000100 = UINT8_C(0x00000004);
+const uint8_t MASK_00001000 = UINT8_C(0x00000008);
+const uint8_t MASK_00010000 = UINT8_C(0x00000010);
+const uint8_t MASK_00100000 = UINT8_C(0x00000020);
+const uint8_t MASK_01000000 = UINT8_C(0x00000040);
+const uint8_t MASK_10000000 = UINT8_C(0x00000080);
 
-static const uint16_t masks_16[] = {
-    MASK_00000000_00000001,
-    MASK_00000000_00000010,
-    MASK_00000000_00000100, 
-    MASK_00000000_00001000,
-    MASK_00000000_00010000,
-    MASK_00000000_00100000,
-    MASK_00000000_01000000,
-    MASK_00000000_10000000,
-    MASK_00000001_00000000,
-    MASK_00000010_00000000,
-    MASK_00000100_00000000,
-    MASK_00001000_00000000,
-    MASK_00010000_00000000,
-    MASK_00100000_00000000,
-    MASK_01000000_00000000,
-    MASK_10000000_00000000
+static const uint8_t masks_8[] = {
+    MASK_00000001,
+    MASK_00000010,
+    MASK_00000100,
+    MASK_00001000,
+    MASK_00010000,
+    MASK_00100000,
+    MASK_01000000,
+    MASK_10000000
 };
 
 static void error_reporter(const struct dc_error *err);
@@ -87,59 +75,95 @@ static void bad_change_state(const struct dc_posix_env *env,
                          const struct dc_fsm_info *info,
                          int from_state_id,
                          int to_state_id);
-static int process(const struct dc_posix_env *env, struct dc_error *err, void *arg);
-static int upper(const struct dc_posix_env *env, struct dc_error *err, void *arg);
-static int lower(const struct dc_posix_env *env, struct dc_error *err, void *arg);
-static int nothing(const struct dc_posix_env *env, struct dc_error *err, void *arg);
-static int do_nothing(int c);
-static int convert(const struct dc_posix_env *env, struct dc_error *err, const char *str, int (*converter)(int));
+static int state_error(const struct dc_posix_env *env, struct dc_error *err, void *arg);
+
+static int readInput(const struct dc_posix_env *env, struct dc_error *err);
+static int convertToMorse(const struct dc_posix_env *env, struct dc_error *err, void *arg);
+static int writeToFile(const struct dc_posix_env *env, struct dc_error *err, void *arg);
 
 
 enum application_states
 {
-    PROCESS = DC_FSM_USER_START,    // 2
-	UPPER,
-	LOWER,
-	NOTHING,
+    READ = DC_FSM_USER_START,    // 2
+    CONVERT,
+    WRITE,
+    ERROR,
 };
 
-
-int main(int argc, char *argv[])
+int main()
 {
     struct dc_error err;
     struct dc_posix_env env;
     int ret_val;
     struct dc_fsm_info *fsm_info;
     static struct dc_fsm_transition transitions[] = {
-            {DC_FSM_INIT, PROCESS,     process},
-            {PROCESS,     UPPER, upper},
-            {PROCESS,     LOWER, lower},
-            {PROCESS,     NOTHING, nothing},
-            {UPPER,       DC_FSM_EXIT, NULL},
-            {LOWER,       DC_FSM_EXIT, NULL},
-            {NOTHING,     DC_FSM_EXIT, NULL},
+            {DC_FSM_INIT,   READ,           readInput},
+            {READ,          CONVERT,        convertToMorse},
+            {CONVERT,       WRITE,          writeToFile},
+            {WRITE,         DC_FSM_EXIT,    NULL},
+            {READ,          ERROR,          state_error},
+            {CONVERT,       ERROR,          state_error},
+            {WRITE,         ERROR,          state_error},
+            {ERROR,         DC_FSM_EXIT,    NULL}
     };
 
     dc_error_init(&err, error_reporter);
     dc_posix_env_init(&env, NULL /*trace_reporter*/);
     ret_val = EXIT_SUCCESS;
-    fsm_info = dc_fsm_info_create(&env, &err, "word");
+    fsm_info = dc_fsm_info_create(&env, &err, "toMorse");
 //    dc_fsm_info_set_will_change_state(fsm_info, will_change_state);
 //    dc_fsm_info_set_did_change_state(fsm_info, did_change_state);
-    dc_fsm_info_set_bad_change_state(fsm_info, bad_change_state);
+//    dc_fsm_info_set_bad_change_state(fsm_info, bad_change_state);
+
 
     if(dc_error_has_no_error(&err))
     {
         int from_state;
         int to_state;
 
-        ret_val = dc_fsm_run(&env, &err, fsm_info, &from_state, &to_state, argv[1], transitions);
+        ret_val = dc_fsm_run(&env, &err, fsm_info, &from_state, &to_state, NULL, transitions);
         dc_fsm_info_destroy(&env, &fsm_info);
     }
 
     return ret_val;
-
 }
+
+static int readInput(const struct dc_posix_env *env, struct dc_error *err) {
+    char chars[BUF_SIZE];
+    ssize_t nread;
+    int ret_val;
+    int next_state;
+
+    ret_val = EXIT_SUCCESS;
+
+    if (dc_error_has_no_error(err)) {
+        while ( (nread = dc_read(env, err, STDIN_FILENO, chars, BUF_SIZE)) > 0) {
+            
+            if (dc_error_has_error(err)) {
+                ret_val = 1;
+            }
+
+            dc_write(env, err, STDOUT_FILENO, chars, (size_t)nread);
+        }
+    }
+
+    next_state = CONVERT;
+    return next_state;
+}
+
+static int convertToMorse(const struct dc_posix_env *env, struct dc_error *err, void *arg) {
+    int next_state;
+    display("convert");
+    next_state = WRITE;
+    return next_state;
+}
+static int writeToFile(const struct dc_posix_env *env, struct dc_error *err, void *arg) {
+    int next_state;
+    display("write");
+    next_state = DC_FSM_EXIT;
+    return next_state;
+}
+
 
 static void error_reporter(const struct dc_error *err)
 {
@@ -180,78 +204,10 @@ static void bad_change_state(const struct dc_posix_env *env,
     printf("%s: bad change %d -> %d\n", dc_fsm_info_get_name(info), from_state_id, to_state_id);
 }
 
-static int process(const struct dc_posix_env *env, struct dc_error *err, void *arg)
+static int state_error(const struct dc_posix_env *env, struct dc_error *err, void *arg)
 {
-	const char *str;
-	char c;
-	int next_state;
+    printf("ERROR\n");
 
-	str = (const char *)arg;
-	c = str[0];
-
-	if(isupper(c))
-	{
-		next_state = UPPER;
-	}	
-	else if(islower(c))
-	{
-		next_state = LOWER;
-	}	
-	else
-	{
-		next_state = NOTHING;
-	}	
-
-	return next_state;
+    return DC_FSM_EXIT;
 }
 
-static int upper(const struct dc_posix_env *env, struct dc_error *err, void *arg)
-{
-	const char *str;
-	
-	str = (const char *)arg;
-	convert(env, err, str, toupper);
-
-	return DC_FSM_EXIT;
-}
-
-static int lower(const struct dc_posix_env *env, struct dc_error *err, void *arg)
-{
-	const char *str;
-	
-	str = (const char *)arg;
-	convert(env, err, str, tolower);
-
-	return DC_FSM_EXIT;
-}
-
-static int nothing(const struct dc_posix_env *env, struct dc_error *err, void *arg)
-{
-	const char *str;
-	
-	str = (const char *)arg;
-	convert(env, err, str, do_nothing);
-
-	return DC_FSM_EXIT;
-}
-
-static int do_nothing(int c)
-{
-	return c;
-}
-
-
-static int convert(const struct dc_posix_env *env, struct dc_error *err, const char *str, int (*converter)(int))
-{
-	size_t len;
-	
-	len = strlen(str);
-
-	for(size_t i = 0; i < len; i++)
-	{
-		printf("%c", converter(str[i]));
-	}
-
-	printf("\n");
-	return DC_FSM_EXIT;
-}
