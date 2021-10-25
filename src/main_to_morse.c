@@ -84,8 +84,7 @@ static int writeToFile(const struct dc_posix_env *env, struct dc_error *err, voi
 
 enum application_states
 {
-    READ = DC_FSM_USER_START,    // 2
-    CONVERT,
+    CONVERT = DC_FSM_USER_START,    // 2
     WRITE,
     ERROR,
 };
@@ -97,11 +96,9 @@ int main()
     int ret_val;
     struct dc_fsm_info *fsm_info;
     static struct dc_fsm_transition transitions[] = {
-            {DC_FSM_INIT,   READ,           readInput},
-            {READ,          CONVERT,        convertToMorse},
+            {DC_FSM_INIT,   CONVERT,           convertToMorse},
             {CONVERT,       WRITE,          writeToFile},
             {WRITE,         DC_FSM_EXIT,    NULL},
-            {READ,          ERROR,          state_error},
             {CONVERT,       ERROR,          state_error},
             {WRITE,         ERROR,          state_error},
             {ERROR,         DC_FSM_EXIT,    NULL}
@@ -116,50 +113,57 @@ int main()
 //    dc_fsm_info_set_bad_change_state(fsm_info, bad_change_state);
 
 
+    // Need to read in the word before starting the FSM so we can pass it around as an argument between states
+    // FSM seems to require any arguments be present when starting it.
+    ssize_t nread;
+    char chars[BUF_SIZE];
+    char** ptr;
+
+    if (dc_error_has_no_error(&err)) {
+        while ( (nread = dc_read(&env, &err, STDIN_FILENO, chars, BUF_SIZE)) > 0) {
+            
+            if (dc_error_has_error(&err)) {
+                ret_val = 1;
+            }
+
+            dc_write(&env, &err, STDOUT_FILENO, chars, (size_t)nread);
+        }
+        ptr = &chars;
+    }
+
+    // Start FSM
     if(dc_error_has_no_error(&err))
     {
         int from_state;
         int to_state;
 
-        ret_val = dc_fsm_run(&env, &err, fsm_info, &from_state, &to_state, NULL, transitions);
+        ret_val = dc_fsm_run(&env, &err, fsm_info, &from_state, &to_state, ptr, transitions);
         dc_fsm_info_destroy(&env, &fsm_info);
     }
 
     return ret_val;
 }
 
-static int readInput(const struct dc_posix_env *env, struct dc_error *err) {
-    char chars[BUF_SIZE];
-    ssize_t nread;
-    int ret_val;
-    int next_state;
-
-    ret_val = EXIT_SUCCESS;
-
-    if (dc_error_has_no_error(err)) {
-        while ( (nread = dc_read(env, err, STDIN_FILENO, chars, BUF_SIZE)) > 0) {
-            
-            if (dc_error_has_error(err)) {
-                ret_val = 1;
-            }
-
-            dc_write(env, err, STDOUT_FILENO, chars, (size_t)nread);
-        }
-    }
-
-    next_state = CONVERT;
-    return next_state;
-}
-
 static int convertToMorse(const struct dc_posix_env *env, struct dc_error *err, void *arg) {
     int next_state;
+    char *str;
+    char *other = "something else";
+
     display("convert");
+    
+    str = (char * )arg;
+    printf("%s", str);
     next_state = WRITE;
+    *(char*)arg = other;
     return next_state;
 }
 static int writeToFile(const struct dc_posix_env *env, struct dc_error *err, void *arg) {
     int next_state;
     display("write");
+
+    char * str;
+    str = (char*)arg;
+    printf("%s", str);
     next_state = DC_FSM_EXIT;
     return next_state;
 }
