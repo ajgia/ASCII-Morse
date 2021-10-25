@@ -59,8 +59,6 @@ static const uint8_t masks_8[] = {
 struct application_settings
 {
     struct dc_opt_settings opts;
-    struct dc_setting_string *parity;
-    struct dc_setting_string *prefix;
 };
 
 static struct dc_application_settings *create_settings( const struct dc_posix_env *env,
@@ -77,9 +75,9 @@ static void trace_reporter(const struct dc_posix_env *env,
                           const char *file_name,
                           const char *function_name,
                           size_t line_number);
-static int readInput(const struct dc_posix_env *env, struct dc_error *err);
-static int convertToMorse(const struct dc_posix_env *env, struct dc_error *err);
-static int writeToFile(const struct dc_posix_env *env, struct dc_error *err);
+static void readInput(const struct dc_posix_env *env, struct dc_error *err, char *dest);
+static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest);
+static void writeToFile(const struct dc_posix_env *env, struct dc_error *err, char *input);
 
 
 int main(int argc, char * argv[])
@@ -166,26 +164,36 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     struct application_settings *app_settings;
     int ret_val;
     DC_TRACE(env);
+    char dest[BUF_SIZE];
+    char * output;
 
     ret_val = EXIT_SUCCESS;
-
-    // Create settings
     app_settings = (struct application_settings *)settings;
 
 
+    readInput(env, err, dest);
+    convertToMorse(env, err, dest, output);
+    writeToFile(env, err, output);
+    
+    return ret_val;
 }
 
+static void readInput(const struct dc_posix_env *env, struct dc_error *err, char *dest) {
+    ssize_t nread;
+    
+    display("read");
+    if (dc_error_has_no_error(err)) {
+        nread = dc_read(env, err, STDIN_FILENO, dest, BUF_SIZE);
+    }
+}
 
-
-
-
-static int convertToMorse(const struct dc_posix_env *env, struct dc_error *err, void *arg) {
-
+static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest) {
+    char * output;
     display("convert");
     
-
+    printf("%s", input);
 }
-static int writeToFile(const struct dc_posix_env *env, struct dc_error *err, void *arg) {
+static void writeToFile(const struct dc_posix_env *env, struct dc_error *err, char *output) {
 
     display("write");
 
