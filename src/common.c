@@ -1,3 +1,5 @@
+/// \file
+
 /*
  * This file is part of dc_dump.
  *
@@ -112,4 +114,14 @@ uint8_t get_mask8(uint8_t byte, uint8_t mask) {
     uint8_t masked;
     masked = byte & mask;
     return masked;
+}
+
+
+static void printLetter(letter l) {
+    printf("%c, %u\n", l.c, l.length);
+    for(size_t i = 0; i < l.length; i++) {
+        printf("%d ", *((l.sequence)+i));
+    }
+    display("");
+    printf("%s\n", l.morse);
 }

@@ -1,4 +1,6 @@
-/**
+/// \file
+
+/*
  * ASCII to Morse
  * Alex Giasson
  * A00982145 
@@ -36,6 +38,9 @@
 
 #define BUF_SIZE 1024
 
+/**
+ * Bit masks
+ */ 
 const uint8_t MASK_00000001 = UINT8_C(0x00000001);
 const uint8_t MASK_00000010 = UINT8_C(0x00000002);
 const uint8_t MASK_00000100 = UINT8_C(0x00000004);
@@ -45,6 +50,9 @@ const uint8_t MASK_00100000 = UINT8_C(0x00000020);
 const uint8_t MASK_01000000 = UINT8_C(0x00000040);
 const uint8_t MASK_10000000 = UINT8_C(0x00000080);
 
+/**
+ * Bit mask array
+ */ 
 static const uint8_t masks_8[] = {
     MASK_10000000,
     MASK_01000000,
@@ -104,12 +112,11 @@ static void constructBinary(const struct dc_posix_env *env, struct dc_error *err
  * Writes binary sequence to STD_OUT
  */ 
 static void writeToFile(const struct dc_posix_env *env, struct dc_error *err, uint8_t *binary, size_t numBytes);
+
+
 /**
- * Prints data members of a letter
+ * Main
  */ 
-static void printLetter(letter l);
-
-
 int main(int argc, char * argv[])
 {
     dc_posix_tracer tracer;
@@ -211,7 +218,7 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     // allocate maximum possible code length
     output = (char*)calloc((nread*15 + nread*2 + 4 + 1), sizeof(char));
 
-    constructMorseRepresentation(env, err, chars, (size_t)nread, output);
+    constructBinaryMorseRepresentation(env, err, chars, (size_t)nread, output);
 
     // calculate resulting size of binary to write
     size_t numBytesBinary = (strlen(output) / 8);
@@ -220,14 +227,14 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
 
     binary = (uint8_t*)calloc(numBytesBinary, sizeof(uint8_t));
 
-    constructBinaryRepresentation(env, err, output, binary);
+    constructBinary(env, err, output, binary);
     writeToFile(env, err, binary, numBytesBinary);
 
     free(output);
     return ret_val;
 }
 
-static void constructMorseRepresentation(const struct dc_posix_env *env, struct dc_error *err, char *input, size_t nread, char *dest) {
+static void constructBinaryMorseRepresentation(const struct dc_posix_env *env, struct dc_error *err, char *input, size_t nread, char *dest) {
     // Process each char in input
     for (size_t i = 0; i < nread-1; i++) {
         // If not a space, get letter from alphabet
@@ -251,7 +258,7 @@ static void constructMorseRepresentation(const struct dc_posix_env *env, struct 
     // printf("%s\n", dest);
 }
 
-static void constructBinaryRepresentation(const struct dc_posix_env *env, struct dc_error *err, char *input, uint8_t *output) {
+static void constructBinary(const struct dc_posix_env *env, struct dc_error *err, char *input, uint8_t *output) {
     // Counter for input chars
     size_t i = 0;
     // Counter for byte bits (8)
@@ -284,17 +291,7 @@ void writeToFile(const struct dc_posix_env *env, struct dc_error *err, uint8_t *
     dc_write(env, err, STDOUT_FILENO, binary, numBytes);
 }
 
-/**
- * Prints letter's members
- */ 
-static void printLetter(letter l) {
-    printf("%c, %u\n", l.c, l.length);
-    for(size_t i = 0; i < l.length; i++) {
-        printf("%d ", *((l.sequence)+i));
-    }
-    display("");
-    printf("%s\n", l.morse);
-}
+
 
 static void error_reporter(const struct dc_error *err) {
     fprintf(stderr, "ERROR: %s : %s : @ %zu : %d\n", err->file_name, err->function_name, err->line_number, 0);

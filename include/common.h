@@ -1,3 +1,5 @@
+/// \file
+
 #ifndef TEMPLATE_COMMON_H
 #define TEMPLATE_COMMON_H
 
@@ -27,9 +29,9 @@
 
 
 /**
- * Set mask bit of byte argument 
+ * Sets mask bit of byte argument 
  */ 
-uint8_t set_bit8(uint8_t byte, uint16_t mask);
+uint8_t set_bit8(uint8_t byte, uint8_t mask);
 /**
  * Prints masked byte argument
  */ 
@@ -41,10 +43,10 @@ uint8_t get_mask8(uint8_t byte, uint8_t mask);
 
 
 /**
- * A function to be documented.
+ * Prints to std_out the string argument followed by a newline
  *
- * @param str a parameter to be documented.
- * @return a return value to be documented.
+ * @param str a string pointer
+ * @return an int
  */
 int display(const char *str);
 
@@ -59,6 +61,9 @@ typedef struct letter {
     size_t length;
 } letter;
 
+/**
+ * Array of all morse letters
+ */ 
 static letter alphabet[26 + 10 + 16] = {
     { .c = 'A', .sequence = {1, 0}, .morse = ".-", .length = 2},
     { .c = 'B', .sequence = {0,1,1,1}, .morse = "-...", .length = 4},
@@ -119,7 +124,14 @@ static letter alphabet[26 + 10 + 16] = {
     { .c = '\n', .sequence = {1,0,1,0}, .morse = ".-.-", .length = 4}
 };
 
+/**
+ * Returns Morse struct letter by char argument
+ */ 
 letter getLetterByChar(char c);
 
+/**
+ * Prints letter's members
+ */ 
+static void printLetter(letter l);
 
 #endif // TEMPLATE_COMMON_H

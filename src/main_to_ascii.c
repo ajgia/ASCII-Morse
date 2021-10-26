@@ -1,3 +1,5 @@
+/// \file
+
 /*
  * This file is part of dc_dump.
  *
