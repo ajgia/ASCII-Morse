@@ -62,24 +62,51 @@ struct application_settings
     struct dc_opt_settings opts;
 };
 
+/*!
+ * Creates application settings 
+ */ 
 static struct dc_application_settings *create_settings( const struct dc_posix_env *env,
                                                         struct dc_error *err);
 
+/**
+ * Destroys application settings
+ */ 
 static int destroy_settings(const struct dc_posix_env *env,
                             struct dc_error *err,
                             struct dc_application_settings **psettings);
+/**
+ * Performs ASCII-to-Morse encoding upon read-in chars
+ */ 
 static int run( const struct dc_posix_env *env,
                 struct dc_error *err,
                 struct dc_application_settings *settings);
+/**
+ * Error reporter
+ */ 
 static void error_reporter(const struct dc_error *err);
+/**
+ * Trace reporter
+ */ 
 static void trace_reporter(const struct dc_posix_env *env,
                           const char *file_name,
                           const char *function_name,
                           size_t line_number);
 
-static void constructMorseRepresentation(const struct dc_posix_env *env, struct dc_error *err, char *input, size_t nread, char *dest);
-static void constructBinaryRepresentation(const struct dc_posix_env *env, struct dc_error *err, char *input, uint8_t *binary);
+/**
+ * Constructs a string representation of binary Morse encoding from ASCII chars
+ */ 
+static void constructBinaryMorseRepresentation(const struct dc_posix_env *env, struct dc_error *err, char *input, size_t nread, char *dest);
+/**
+ * Constructs a real binary sequence from a Morse binary string representation
+ */ 
+static void constructBinary(const struct dc_posix_env *env, struct dc_error *err, char *input, uint8_t *binary);
+/**
+ * Writes binary sequence to STD_OUT
+ */ 
 static void writeToFile(const struct dc_posix_env *env, struct dc_error *err, uint8_t *binary, size_t numBytes);
+/**
+ * Prints data members of a letter
+ */ 
 static void printLetter(letter l);
 
 
@@ -176,7 +203,7 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     ret_val = EXIT_SUCCESS;
     app_settings = (struct application_settings *)settings;
     
-    
+    // Read
     if (dc_error_has_no_error(err)) {
         nread = dc_read(env, err, STDIN_FILENO, chars, BUF_SIZE);
     }
@@ -184,7 +211,6 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     // allocate maximum possible code length
     output = (char*)calloc((nread*15 + nread*2 + 4 + 1), sizeof(char));
 
-    // convertToMorse(env, err, chars, (size_t)nread, output);
     constructMorseRepresentation(env, err, chars, (size_t)nread, output);
 
     // calculate resulting size of binary to write
@@ -194,7 +220,6 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
 
     binary = (uint8_t*)calloc(numBytesBinary, sizeof(uint8_t));
 
-    // printf("constructing binary");
     constructBinaryRepresentation(env, err, output, binary);
     writeToFile(env, err, binary, numBytesBinary);
 
@@ -234,7 +259,6 @@ static void constructBinaryRepresentation(const struct dc_posix_env *env, struct
     // Counter for which byte
     size_t k = 0;
 
-    dc_write(env, err, STDOUT_FILENO, output, 2);
     while( *(input+i) ) {
 
         // Set bit of current byte

@@ -94,11 +94,12 @@ letter getLetterByChar(char c) {
     }
 }
 
-uint8_t set_bit8(uint8_t byte, uint16_t mask) {
+uint8_t set_bit8(uint8_t byte, uint8_t mask) {
     uint8_t set;
     set = byte | mask;
     return set;
 }
+
 
 void print_mask8(uint8_t byte, uint8_t mask) {
     uint8_t masked;

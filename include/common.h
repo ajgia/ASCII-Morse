@@ -25,8 +25,18 @@
  *  along with dc_dump.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+
+/**
+ * Set mask bit of byte argument 
+ */ 
 uint8_t set_bit8(uint8_t byte, uint16_t mask);
+/**
+ * Prints masked byte argument
+ */ 
 void print_mask8(uint8_t byte, uint8_t mask);
+/**
+ * Gets masked byte
+ */ 
 uint8_t get_mask8(uint8_t byte, uint8_t mask);
 
 
