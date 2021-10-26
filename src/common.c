@@ -26,7 +26,6 @@ int display(const char *str)
 }
 
 letter getLetterByChar(char c) {
-    letter l = alphabet[0];
     if ( isalpha(c) ) {
         int a = toupper(c) - 65;
         return alphabet[a];
