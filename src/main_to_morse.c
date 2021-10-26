@@ -76,9 +76,9 @@ static void trace_reporter(const struct dc_posix_env *env,
                           const char *function_name,
                           size_t line_number);
 static void readInput(const struct dc_posix_env *env, struct dc_error *err, char *dest);
-static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest);
+static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err, char *input, size_t nread, char *dest);
 static void writeToFile(const struct dc_posix_env *env, struct dc_error *err, char *input);
-
+static void printLetter(letter l);
 
 int main(int argc, char * argv[])
 {
@@ -166,37 +166,32 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     DC_TRACE(env);
     char chars[BUF_SIZE];
     char * output;
+    ssize_t nread;
+    
 
     ret_val = EXIT_SUCCESS;
     app_settings = (struct application_settings *)settings;
+    
+    
+   
+    display("read");
+    if (dc_error_has_no_error(err)) {
+        nread = dc_read(env, err, STDIN_FILENO, chars, BUF_SIZE);
+    }
 
-
-    readInput(env, err, chars);
-    convertToMorse(env, err, chars, output);
+    convertToMorse(env, err, chars, (size_t)nread, output);
     writeToFile(env, err, output);
 
-    // Prints out a letter's members
-    // printf("%c, %d\n", alphabet[0].c, alphabet[0].sequenceLength);
-    // for(size_t i = 0; i < alphabet[0].sequenceLength; i++) {
-    //     printf("%d\n", *((alphabet[0].sequence)+i));
-    // }
 
     return ret_val;
 }
 
-static void readInput(const struct dc_posix_env *env, struct dc_error *err, char *dest) {
-    ssize_t nread;
-    
-    display("read");
-    if (dc_error_has_no_error(err)) {
-        nread = dc_read(env, err, STDIN_FILENO, dest, BUF_SIZE);
-    }
-}
+static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err, char *input, size_t nread, char *dest) {
+    // letter l = getLetterByChar('&');
+    // printLetter(l);
 
-static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest) {
-    char * output;
-    display("convert");
-    
+    for (size_t i = 0; i < 52; i++)
+        printLetter(alphabet[i]);
     printf("%s", input);
 }
 
@@ -204,6 +199,17 @@ static void writeToFile(const struct dc_posix_env *env, struct dc_error *err, ch
 
     display("write");
 
+}
+
+/**
+ * Prints letter's members
+ */ 
+static void printLetter(letter l) {
+    printf("%c, %d\n", l.c, l.length);
+    for(size_t i = 0; i < l.length; i++) {
+        printf("%d ", *((l.sequence)+i));
+    }
+    display("");
 }
 
 static void error_reporter(const struct dc_error *err) {

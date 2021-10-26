@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 /*
  * This file is part of dc_dump.
@@ -39,7 +40,7 @@ typedef struct letter {
     size_t length;
 } letter;
 
-static letter alphabet[26 + 10 + 18] = {
+static letter alphabet[26 + 10 + 16] = {
     { .c = 'A', .sequence = {1, 0}, .length = 2},
     { .c = 'B', .sequence = {0,1,1,1}, .length = 4},
     { .c = 'C', .sequence = {0,1,0,1}, .length = 4},
@@ -98,6 +99,7 @@ static letter alphabet[26 + 10 + 18] = {
     { .c = '/', .sequence = {0,1,1,0,1}, .length = 5}
 };
 
+letter getLetterByChar(char c);
 
 
 #endif // TEMPLATE_COMMON_H

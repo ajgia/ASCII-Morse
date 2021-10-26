@@ -24,3 +24,68 @@ int display(const char *str)
 
     return 0;
 }
+
+letter getLetterByChar(char c) {
+    letter l = alphabet[0];
+    if ( isalpha(c) ) {
+        int a = toupper(c) - 65;
+        return alphabet[a];
+    } else if (isdigit(c) ) {
+        int a = c - 48 + 26;
+        return alphabet[a];
+    } 
+
+    switch (c) {
+        case '&':
+            return alphabet[36];
+            break;
+        case '\'':
+            return alphabet[37];
+            break;
+        case '@':
+            return alphabet[38];
+            break;
+        case ')':
+            return alphabet[39];
+            break;
+        case '(':
+            return alphabet[40];
+            break;
+        case ':':
+            return alphabet[41];
+            break;
+        case ',':
+            return alphabet[42];
+            break;
+        case '=':
+            return alphabet[43];
+            break;
+        case '!':
+            return alphabet[44];
+            break;
+        case '.':
+            return alphabet[45];
+            break;
+        case '-':
+            return alphabet[46];
+            break;
+        case '%':
+            return alphabet[47];
+            break;
+        case '+':
+            return alphabet[48];
+            break;
+        case '\"':
+            return alphabet[49];
+            break;
+        case '\?':
+            return alphabet[50];
+            break;
+        case '/':
+            return alphabet[51];
+            break;
+        default:
+            return alphabet[25];
+            break;
+    }
+}
