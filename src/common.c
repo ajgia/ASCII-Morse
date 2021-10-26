@@ -17,6 +17,8 @@
 
 #include "common.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 int display(const char *str)
 {
@@ -83,8 +85,30 @@ letter getLetterByChar(char c) {
         case '/':
             return alphabet[51];
             break;
+        case '\n':
+            return alphabet[52];
+            break;
         default:
             return alphabet[25];
             break;
     }
+}
+
+uint8_t set_bit8(uint8_t byte, uint16_t mask) {
+    uint8_t set;
+    set = byte | mask;
+    return set;
+}
+
+void print_mask8(uint8_t byte, uint8_t mask) {
+    uint8_t masked;
+    masked = byte & mask;
+    printf("%u\n", masked);
+}
+
+
+uint8_t get_mask8(uint8_t byte, uint8_t mask) {
+    uint8_t masked;
+    masked = byte & mask;
+    return masked;
 }

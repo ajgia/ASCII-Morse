@@ -56,6 +56,7 @@ static const uint8_t masks_8[] = {
     MASK_10000000
 };
 
+
 struct application_settings
 {
     struct dc_opt_settings opts;
@@ -75,10 +76,12 @@ static void trace_reporter(const struct dc_posix_env *env,
                           const char *file_name,
                           const char *function_name,
                           size_t line_number);
-static void readInput(const struct dc_posix_env *env, struct dc_error *err, char *dest);
-static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err, char *input, size_t nread, char *dest);
-static void writeToFile(const struct dc_posix_env *env, struct dc_error *err, char *input);
+
+static void constructMorseRepresentation(const struct dc_posix_env *env, struct dc_error *err, char *input, size_t nread, char *dest);
+static void constructBinaryRepresentation(const struct dc_posix_env *env, struct dc_error *err, char *input, uint8_t *binary);
+static void writeToFile(const struct dc_posix_env *env, struct dc_error *err, uint8_t *binary, size_t numBytes);
 static void printLetter(letter l);
+
 
 int main(int argc, char * argv[])
 {
@@ -165,51 +168,109 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     int ret_val;
     DC_TRACE(env);
     char chars[BUF_SIZE];
-    char * output;
+    char *output;
+    uint8_t *binary;
     ssize_t nread;
-    
+
 
     ret_val = EXIT_SUCCESS;
     app_settings = (struct application_settings *)settings;
     
     
-   
-    display("read");
     if (dc_error_has_no_error(err)) {
         nread = dc_read(env, err, STDIN_FILENO, chars, BUF_SIZE);
     }
 
-    convertToMorse(env, err, chars, (size_t)nread, output);
-    writeToFile(env, err, output);
+    // allocate maximum possible code length
+    output = (char*)calloc((nread*15 + nread*2 + 4 + 1), sizeof(char));
 
+    // convertToMorse(env, err, chars, (size_t)nread, output);
+    constructMorseRepresentation(env, err, chars, (size_t)nread, output);
 
+    // calculate resulting size of binary to write
+    size_t numBytesBinary = (strlen(output) / 8);
+    if ( (strlen(output)%8) != 0 )
+        ++numBytesBinary;
+
+    binary = (uint8_t*)calloc(numBytesBinary, sizeof(uint8_t));
+
+    // printf("constructing binary");
+    constructBinaryRepresentation(env, err, output, binary);
+    writeToFile(env, err, binary, numBytesBinary);
+
+    free(output);
     return ret_val;
 }
 
-static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err, char *input, size_t nread, char *dest) {
-    // letter l = getLetterByChar('&');
-    // printLetter(l);
-
-    for (size_t i = 0; i < 52; i++)
-        printLetter(alphabet[i]);
-    printf("%s", input);
+static void constructMorseRepresentation(const struct dc_posix_env *env, struct dc_error *err, char *input, size_t nread, char *dest) {
+    // Process each char in input
+    for (size_t i = 0; i < nread-1; i++) {
+        // If not a space, get letter from alphabet
+        if (*(input+i) != ' ') {
+            letter l = getLetterByChar(*(input+i));
+            // Translate dots and dashes of the char to 1s and 0s
+            for(size_t i = 0; i < l.length; i++) {
+                if (l.morse[i] == '.') 
+                    strcat(dest, "10");
+                else 
+                    strcat(dest, "01");
+            }
+            strcat(dest, "00");
+        }
+        // If space, append space
+        else 
+            strcat(dest, "11");
+    }
+    // EOT
+    strcat(dest, "0000");
+    // printf("%s\n", dest);
 }
 
-static void writeToFile(const struct dc_posix_env *env, struct dc_error *err, char *output) {
+static void constructBinaryRepresentation(const struct dc_posix_env *env, struct dc_error *err, char *input, uint8_t *output) {
+    // Counter for input chars
+    size_t i = 0;
+    // Counter for byte bits (8)
+    size_t j = 0;
+    // Counter for which byte
+    size_t k = 0;
 
-    display("write");
+    // TODO: reverse masks because byte is in reverse rn
+    dc_write(env, err, STDOUT_FILENO, output, 2);
+    while( *(input+i) ) {
 
+        // Set bit of current byte
+        if (j < 8) {
+            // if ( get_mask8(*(input+i), masks_8[j]) ) {
+            if ( *(input+i) == '1') {
+               *(output+k) = set_bit8(*(output+k), masks_8[j]);
+            }
+            ++j;
+            ++i;
+        }
+
+        // New byte
+        else {
+            j = 0;
+            ++k;
+        }
+
+    }
+}
+
+void writeToFile(const struct dc_posix_env *env, struct dc_error *err, uint8_t *binary, size_t numBytes) {
+    dc_write(env, err, STDOUT_FILENO, binary, numBytes);
 }
 
 /**
  * Prints letter's members
  */ 
 static void printLetter(letter l) {
-    printf("%c, %d\n", l.c, l.length);
+    printf("%c, %u\n", l.c, l.length);
     for(size_t i = 0; i < l.length; i++) {
         printf("%d ", *((l.sequence)+i));
     }
     display("");
+    printf("%s\n", l.morse);
 }
 
 static void error_reporter(const struct dc_error *err) {

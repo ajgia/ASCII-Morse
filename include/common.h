@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 
 /*
  * This file is part of dc_dump.
@@ -21,6 +24,11 @@
  *  You should have received a copy of the GNU General Public License
  *  along with dc_dump.  If not, see <https://www.gnu.org/licenses/>.
  */
+
+uint8_t set_bit8(uint8_t byte, uint16_t mask);
+void print_mask8(uint8_t byte, uint8_t mask);
+uint8_t get_mask8(uint8_t byte, uint8_t mask);
+
 
 /**
  * A function to be documented.
@@ -42,62 +50,63 @@ typedef struct letter {
 } letter;
 
 static letter alphabet[26 + 10 + 16] = {
-    { .c = 'A', .sequence = {1, 0}, .morse = {".-"}, .length = 2},
-    { .c = 'B', .sequence = {0,1,1,1}, .morse = {"-..."}, .length = 4},
-    { .c = 'C', .sequence = {0,1,0,1}, .morse = {"-.-."}, .length = 4},
-    { .c = 'D', .sequence = {0,1,1}, .morse = {"-.."}, .length = 3},
-    { .c = 'E', .sequence = {1}, .morse = {"."}, .length = 1},
-    { .c = 'F', .sequence = {1,1,0,1}, .morse = {"..-."}, .length = 4},
-    { .c = 'G', .sequence = {0,0,1}, .morse = {"--."}, .length = 3},
-    { .c = 'H', .sequence = {1,1,1,1}, .morse = {"...."}, .length = 4},
-    { .c = 'I', .sequence = {1,1}, .morse = {".."}, .length = 2},
-    { .c = 'J', .sequence = {1,0,0,0}, .morse = {".---"}, .length = 4},
-    { .c = 'K', .sequence = {0,1,0}, .morse = {"-.-"}, .length = 3},
-    { .c = 'L', .sequence = {1,0,1,1}, .morse = {".-.."}, .length = 4},
-    { .c = 'M', .sequence = {0,0}, .morse = {"--"}, .length = 2},
-    { .c = 'N', .sequence = {0,1}, .morse = {"-."}, .length = 2},
-    { .c = 'O', .sequence = {0,0,0}, .morse = {"---"}, .length = 3},
-    { .c = 'P', .sequence = {1,0,0,1}, .morse = {".--."}, .length = 4},
-    { .c = 'Q', .sequence = {0,0,1,0}, .morse = {"--.-"}, .length = 4},
-    { .c = 'R', .sequence = {1,0,1}, .morse = {".-."}, .length = 3},
-    { .c = 'S', .sequence = {1,1,1}, .morse = {"..."}, .length = 3},
-    { .c = 'T', .sequence = {0}, .morse = {"-"}, .length = 1},
-    { .c = 'U', .sequence = {1,1,0}, .morse = {"..-"}, .length = 3},
-    { .c = 'V', .sequence = {1,1,1,0}, .morse = {"...-"}, .length = 4},
-    { .c = 'W', .sequence = {1,0,0}, .morse = {".--"}, .length = 3},
-    { .c = 'X', .sequence = {0,1,1,0}, .morse = {"-..-"}, .length = 4},
-    { .c = 'Y', .sequence = {0,1,0,0}, .morse = {"-.--"}, .length = 4},
-    { .c = 'Z', .sequence = {0,0,1,1}, .morse = {"--.."}, .length = 4},
+    { .c = 'A', .sequence = {1, 0}, .morse = ".-", .length = 2},
+    { .c = 'B', .sequence = {0,1,1,1}, .morse = "-...", .length = 4},
+    { .c = 'C', .sequence = {0,1,0,1}, .morse = "-.-.", .length = 4},
+    { .c = 'D', .sequence = {0,1,1}, .morse = "-..", .length = 3},
+    { .c = 'E', .sequence = {1}, .morse = ".", .length = 1},
+    { .c = 'F', .sequence = {1,1,0,1}, .morse = "..-.", .length = 4},
+    { .c = 'G', .sequence = {0,0,1}, .morse = "--.", .length = 3},
+    { .c = 'H', .sequence = {1,1,1,1}, .morse = "....", .length = 4},
+    { .c = 'I', .sequence = {1,1}, .morse = "..", .length = 2},
+    { .c = 'J', .sequence = {1,0,0,0}, .morse = ".---", .length = 4},
+    { .c = 'K', .sequence = {0,1,0}, .morse = "-.-", .length = 3},
+    { .c = 'L', .sequence = {1,0,1,1}, .morse = ".-..", .length = 4},
+    { .c = 'M', .sequence = {0,0}, .morse = "--", .length = 2},
+    { .c = 'N', .sequence = {0,1}, .morse = "-.", .length = 2},
+    { .c = 'O', .sequence = {0,0,0}, .morse = "---", .length = 3},
+    { .c = 'P', .sequence = {1,0,0,1}, .morse = ".--.", .length = 4},
+    { .c = 'Q', .sequence = {0,0,1,0}, .morse = "--.-", .length = 4},
+    { .c = 'R', .sequence = {1,0,1}, .morse = ".-.", .length = 3},
+    { .c = 'S', .sequence = {1,1,1}, .morse = "...", .length = 3},
+    { .c = 'T', .sequence = {0}, .morse = "-", .length = 1},
+    { .c = 'U', .sequence = {1,1,0}, .morse = "..-", .length = 3},
+    { .c = 'V', .sequence = {1,1,1,0}, .morse = "...-", .length = 4},
+    { .c = 'W', .sequence = {1,0,0}, .morse = ".--", .length = 3},
+    { .c = 'X', .sequence = {0,1,1,0}, .morse = "-..-", .length = 4},
+    { .c = 'Y', .sequence = {0,1,0,0}, .morse = "-.--", .length = 4},
+    { .c = 'Z', .sequence = {0,0,1,1}, .morse = "--..", .length = 4},
 
-    { .c = '0', .sequence = {0,0,0,0,0}, .morse = {"-----"}, .length = 5},
-    { .c = '1', .sequence = {1,0,0,0,0}, .morse = {".----"}, .length = 5},
-    { .c = '2', .sequence = {1,1,0,0,0}, .morse = {"..---"}, .length = 5},
-    { .c = '3', .sequence = {1,1,1,0,0}, .morse = {"...--"}, .length = 5},
-    { .c = '4', .sequence = {1,1,1,1,0}, .morse = {"....-"}, .length = 5},
-    { .c = '5', .sequence = {1,1,1,1,1}, .morse = {"....."}, .length = 5},
-    { .c = '6', .sequence = {0,1,1,1,1}, .morse = {"-...."}, .length = 5},
-    { .c = '7', .sequence = {0,0,1,1,1}, .morse = {"--..."}, .length = 5},
-    { .c = '8', .sequence = {0,0,0,1,1}, .morse = {"---.."}, .length = 5},
-    { .c = '9', .sequence = {0,0,0,0,1}, .morse = {"----."}, .length = 5},
+    { .c = '0', .sequence = {0,0,0,0,0}, .morse = "-----", .length = 5},
+    { .c = '1', .sequence = {1,0,0,0,0}, .morse = ".----", .length = 5},
+    { .c = '2', .sequence = {1,1,0,0,0}, .morse = "..---", .length = 5},
+    { .c = '3', .sequence = {1,1,1,0,0}, .morse = "...--", .length = 5},
+    { .c = '4', .sequence = {1,1,1,1,0}, .morse = "....-", .length = 5},
+    { .c = '5', .sequence = {1,1,1,1,1}, .morse = ".....", .length = 5},
+    { .c = '6', .sequence = {0,1,1,1,1}, .morse = "-....", .length = 5},
+    { .c = '7', .sequence = {0,0,1,1,1}, .morse = "--...", .length = 5},
+    { .c = '8', .sequence = {0,0,0,1,1}, .morse = "---..", .length = 5},
+    { .c = '9', .sequence = {0,0,0,0,1}, .morse = "----.", .length = 5},
 
 // Error punctuation. Skipped
-    { .c = '&', .sequence = {1,0,1,1,1}, .morse = {".-..."}, .length = 5},
-    { .c = '\'', .sequence = {1,0,0,0,0,1}, .morse = {".----."}, .length = 6},
-    { .c = '@', .sequence = {1,0,0,1,0,1}, .morse = {".--.-."}, .length = 6},
-    { .c = ')', .sequence = {0,1,0,0,1,0}, .morse = {"-.--.-"}, .length = 6},
-    { .c = '(', .sequence = {0,1,0,0,1}, .morse = {"-.--."}, .length = 5},
-    { .c = ':', .sequence = {0,0,0,1,1,1}, .morse = {"---..."}, .length = 6},
-    { .c = ',', .sequence = {0,0,1,1,0,0}, .morse = {"--..--"}, .length = 6},
-    { .c = '=', .sequence = {0,1,1,1,0}, .morse = {"-...-"}, .length = 5},
-    { .c = '!', .sequence = {0,1,0,1,0,0}, .morse = {"-.-.--"}, .length = 6},
-    { .c = '.', .sequence = {1,0,1,0,1,0}, .morse = {".-.-.-"}, .length = 6},
-    { .c = '-', .sequence = {0,1,1,1,1,0}, .morse = {"-....-"}, .length = 6},
+    { .c = '&', .sequence = {1,0,1,1,1}, .morse = ".-...", .length = 5},
+    { .c = '\'', .sequence = {1,0,0,0,0,1}, .morse = ".----.", .length = 6},
+    { .c = '@', .sequence = {1,0,0,1,0,1}, .morse = ".--.-.", .length = 6},
+    { .c = ')', .sequence = {0,1,0,0,1,0}, .morse = "-.--.-", .length = 6},
+    { .c = '(', .sequence = {0,1,0,0,1}, .morse = "-.--.", .length = 5},
+    { .c = ':', .sequence = {0,0,0,1,1,1}, .morse = "---...", .length = 6},
+    { .c = ',', .sequence = {0,0,1,1,0,0}, .morse = "--..--", .length = 6},
+    { .c = '=', .sequence = {0,1,1,1,0}, .morse = "-...-", .length = 5},
+    { .c = '!', .sequence = {0,1,0,1,0,0}, .morse = "-.-.--", .length = 6},
+    { .c = '.', .sequence = {1,0,1,0,1,0}, .morse = ".-.-.-", .length = 6},
+    { .c = '-', .sequence = {0,1,1,1,1,0}, .morse = "-....-", .length = 6},
  // Is the same as 'X'   { .c = '*', .sequence = {0,1,1,0}, .length = 4},
-    { .c = '%', .sequence = {0,0,0,0,0, 0,1,1,0,1, 0,0,0,0,0}, .morse = {"------..-.-----"}, .length = 15},
-    { .c = '+', .sequence = {1,0,1,0,1}, .morse = {".-.-."}, .length = 5},
-    { .c = '\"', .sequence = {1,0,1,1,0,1}, .morse = {".-..-."}, .length = 6},
-    { .c = '\?', .sequence = {1,1,0,0,1,1}, .morse = {"..--.."}, .length = 6},
-    { .c = '/', .sequence = {0,1,1,0,1}, .morse = {"-..-."}, .length = 5}
+    { .c = '%', .sequence = {0,0,0,0,0, 0,1,1,0,1, 0,0,0,0,0}, .morse = "------..-.-----", .length = 15},
+    { .c = '+', .sequence = {1,0,1,0,1}, .morse = ".-.-.", .length = 5},
+    { .c = '\"', .sequence = {1,0,1,1,0,1}, .morse = ".-..-.", .length = 6},
+    { .c = '\?', .sequence = {1,1,0,0,1,1}, .morse = "..--..", .length = 6},
+    { .c = '/', .sequence = {0,1,1,0,1}, .morse = "-..-.", .length = 5},
+    { .c = '\n', .sequence = {1,0,1,0}, .morse = ".-.-", .length = 4}
 };
 
 letter getLetterByChar(char c);
