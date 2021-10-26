@@ -234,7 +234,6 @@ static void constructBinaryRepresentation(const struct dc_posix_env *env, struct
     // Counter for which byte
     size_t k = 0;
 
-    // TODO: reverse masks because byte is in reverse rn
     dc_write(env, err, STDOUT_FILENO, output, 2);
     while( *(input+i) ) {
 
