@@ -109,7 +109,7 @@ static void constructStringBinary(const struct dc_posix_env *env, struct dc_erro
 /**
  * Converts a string of binary morse to ASCII
  */ 
-static void convertToAscii(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest);
+static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest);
 
 /**
  * Main
@@ -200,7 +200,7 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     ssize_t nread = 0;
     char chars[BUF_SIZE];
     char stringBinary[8*BUF_SIZE] = "";
-    char decodedMessage[BUF_SIZE*8] = "";
+    char morseMessage[BUF_SIZE*8] = "";
 
     ret_val = EXIT_SUCCESS;
     app_settings = (struct application_settings *)settings;
@@ -212,10 +212,12 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     
     // dc_write(env, err, STDOUT_FILENO, chars, nread);
     // dc_write(env, err, STDOUT_FILENO, "\n", 1);
-    constructStringBinary(env, err, chars, nread, stringBinary);
-    // printf("%s\n", stringBinary);
-    convertToAscii(env, err, stringBinary, decodedMessage);
 
+    constructStringBinary(env, err, chars, nread, stringBinary);
+     printf("%s\n", stringBinary);
+     
+    convertToMorse(env, err, stringBinary, morseMessage);
+    dc_write(env, err, STDOUT_FILENO, morseMessage, strlen(morseMessage));
 
 
     return ret_val;
@@ -235,11 +237,36 @@ static void constructStringBinary(const struct dc_posix_env *env, struct dc_erro
     }
 }
 
-static void convertToAscii(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest) {
+static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest) {
     // loop through *input 
     // remember *input ends in a null byte
     // store the previous char. if last char == 0 and thisChar == 0, then end of character.
-    
+    size_t i = 0;
+    char c;
+    char prevC;
+
+    while ( *(input+i) ) {
+
+        prevC = c;
+        c = *(input+i);
+        // printf("%c", c);
+
+        if ( i%2 == 1 && i != 0 ) {
+            // translate c and prevC into dot, dash or space
+            if ( prevC == '0' && c == '1') {
+                strcat(dest, "-");
+            } else if ( prevC == '1' && c == '0') {
+                strcat(dest, ".");
+            } else if ( prevC == '1' && c == '1') {
+                strcat(dest, " ");
+            }
+            else {
+                strcat(dest, "00"); // EOC
+            }
+            
+        }
+        ++i;
+    }
 }
 
 static void error_reporter(const struct dc_error *err) {
