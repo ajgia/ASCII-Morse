@@ -100,7 +100,16 @@ static void trace_reporter(const struct dc_posix_env *env,
                           const char *function_name,
                           size_t line_number);
 
+/**
+ * Construct 0 and 1 string representation of binary input.
+ */ 
+static void constructStringBinary(const struct dc_posix_env *env, struct dc_error *err, char *input, size_t nread, char *dest);
 
+
+/**
+ * Converts a string of binary morse to ASCII
+ */ 
+static void convertToAscii(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest);
 
 /**
  * Main
@@ -184,18 +193,54 @@ static int destroy_settings(const struct dc_posix_env *env,
     return 0;
 }
 
-
 static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_application_settings *settings) {
     struct application_settings *app_settings;
     int ret_val;
     DC_TRACE(env);
+    ssize_t nread = 0;
+    char chars[BUF_SIZE];
+    char stringBinary[8*BUF_SIZE] = "";
+    char decodedMessage[BUF_SIZE*8] = "";
 
     ret_val = EXIT_SUCCESS;
     app_settings = (struct application_settings *)settings;
-    display("To ascii");
+
+    // Read
+    if (dc_error_has_no_error(err)) {
+        nread = dc_read(env, err, STDIN_FILENO, chars, BUF_SIZE);
+    }
+    
+    // dc_write(env, err, STDOUT_FILENO, chars, nread);
+    // dc_write(env, err, STDOUT_FILENO, "\n", 1);
+    constructStringBinary(env, err, chars, nread, stringBinary);
+    // printf("%s\n", stringBinary);
+    convertToAscii(env, err, stringBinary, decodedMessage);
+
+
+
     return ret_val;
 }
 
+static void constructStringBinary(const struct dc_posix_env *env, struct dc_error *err, char *input, size_t nread, char *dest) {
+    // loop each byte
+    for (size_t i = 0; i < nread; ++i) {
+
+        // loop inside the byte
+        for (size_t j = 0; j < 8; ++j) {
+            if ( get_mask8(*(input+i), masks_8[j]) )
+                strcat(dest, "1");
+            else
+                strcat(dest, "0");
+        }
+    }
+}
+
+static void convertToAscii(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest) {
+    // loop through *input 
+    // remember *input ends in a null byte
+    // store the previous char. if last char == 0 and thisChar == 0, then end of character.
+    
+}
 
 static void error_reporter(const struct dc_error *err) {
     fprintf(stderr, "ERROR: %s : %s : @ %zu : %d\n", err->file_name, err->function_name, err->line_number, 0);

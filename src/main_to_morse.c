@@ -231,6 +231,7 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     writeToFile(env, err, binary, numBytesBinary);
 
     free(output);
+    free(binary);
     return ret_val;
 }
 
@@ -283,15 +284,12 @@ static void constructBinary(const struct dc_posix_env *env, struct dc_error *err
             j = 0;
             ++k;
         }
-
     }
 }
 
 void writeToFile(const struct dc_posix_env *env, struct dc_error *err, uint8_t *binary, size_t numBytes) {
     dc_write(env, err, STDOUT_FILENO, binary, numBytes);
 }
-
-
 
 static void error_reporter(const struct dc_error *err) {
     fprintf(stderr, "ERROR: %s : %s : @ %zu : %d\n", err->file_name, err->function_name, err->line_number, 0);
