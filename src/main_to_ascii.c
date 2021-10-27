@@ -180,7 +180,7 @@ static struct dc_application_settings *create_settings(const struct dc_posix_env
 }
 
 static int destroy_settings(const struct dc_posix_env *env,
-                            __attribute__((unused)) struct dc_error *err,
+                            struct dc_error *err,
                             struct dc_application_settings **psettings) 
 {
     struct application_settings *app_settings;
@@ -323,10 +323,10 @@ static void error_reporter(const struct dc_error *err) {
     fprintf(stderr, "ERROR: %s\n", err->message);
 }
 
-static void trace_reporter(__attribute__((unused))  const struct dc_posix_env *env,
-                                                    const char *file_name,
-                                                    const char *function_name,
-                                                    size_t line_number) {
+static void trace_reporter( const struct dc_posix_env *env,
+                            const char *file_name,
+                            const char *function_name,
+                            size_t line_number) {
     fprintf(stdout, "TRACE: %s : %s : @ %zu\n", file_name, function_name, line_number);
 }
 
