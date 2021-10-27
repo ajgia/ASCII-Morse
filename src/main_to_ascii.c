@@ -107,9 +107,14 @@ static void constructStringBinary(const struct dc_posix_env *env, struct dc_erro
 
 
 /**
- * Converts a string of binary morse to ASCII
+ * Converts a string of binary morse to dot/dash morse
  */ 
 static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest);
+
+/**
+ * Converts dot/dash morse to ASCII
+ */ 
+static void convertToAscii(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest);
 
 /**
  * Main
@@ -199,8 +204,9 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     DC_TRACE(env);
     ssize_t nread = 0;
     char chars[BUF_SIZE];
-    char stringBinary[8*BUF_SIZE] = "";
+    char stringBinary[BUF_SIZE*8] = "";
     char morseMessage[BUF_SIZE*8] = "";
+    char asciiMessage[BUF_SIZE*8] = "";
 
     ret_val = EXIT_SUCCESS;
     app_settings = (struct application_settings *)settings;
@@ -211,14 +217,19 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     }
     
     // dc_write(env, err, STDOUT_FILENO, chars, nread);
-    // dc_write(env, err, STDOUT_FILENO, "\n", 1);
+    // display("");
 
     constructStringBinary(env, err, chars, nread, stringBinary);
-     printf("%s\n", stringBinary);
-     
+    dc_write(env, err, STDOUT_FILENO, stringBinary, strlen(stringBinary));
+    display("");
+
     convertToMorse(env, err, stringBinary, morseMessage);
     dc_write(env, err, STDOUT_FILENO, morseMessage, strlen(morseMessage));
+    display("");
 
+    convertToAscii(env, err, morseMessage, asciiMessage);
+    dc_write(env, err, STDOUT_FILENO, asciiMessage, strlen(asciiMessage) + 1);
+    display("");
 
     return ret_val;
 }
@@ -267,6 +278,10 @@ static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err,
         }
         ++i;
     }
+}
+
+static void convertToAscii(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest) {
+
 }
 
 static void error_reporter(const struct dc_error *err) {
