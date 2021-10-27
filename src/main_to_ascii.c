@@ -219,7 +219,7 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     // dc_write(env, err, STDOUT_FILENO, chars, nread);
     // display("");
 
-    constructStringBinary(env, err, chars, nread, stringBinary);
+    constructStringBinary(env, err, chars, (size_t)nread, stringBinary);
     dc_write(env, err, STDOUT_FILENO, stringBinary, strlen(stringBinary));
     display("");
 
@@ -274,14 +274,13 @@ static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err,
             else {
                 strcat(dest, "00"); // EOC
             }
-            
         }
         ++i;
     }
 }
 
 static void convertToAscii(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest) {
-
+    printLetter(getLetterByMorse("."));
 }
 
 static void error_reporter(const struct dc_error *err) {

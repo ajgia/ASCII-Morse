@@ -64,7 +64,7 @@ typedef struct letter {
 /**
  * Array of all morse letters
  */ 
-static letter alphabet[26 + 10 + 16] = {
+static letter alphabet[26 + 10 + 16 + 1] = {
     { .c = 'A', .sequence = {1, 0}, .morse = ".-", .length = 2},
     { .c = 'B', .sequence = {0,1,1,1}, .morse = "-...", .length = 4},
     { .c = 'C', .sequence = {0,1,0,1}, .morse = "-.-.", .length = 4},
@@ -130,8 +130,13 @@ static letter alphabet[26 + 10 + 16] = {
 letter getLetterByChar(char c);
 
 /**
+ * Returns Morse struct letter by morse sequence
+ */ 
+letter getLetterByMorse(char *morse);
+
+/**
  * Prints letter's members
  */ 
-static void printLetter(letter l);
+void printLetter(letter l);
 
 #endif // TEMPLATE_COMMON_H

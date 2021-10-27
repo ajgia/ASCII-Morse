@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 
 int display(const char *str)
 {
@@ -96,6 +97,14 @@ letter getLetterByChar(char c) {
     }
 }
 
+letter getLetterByMorse(char *morse) {
+    for (size_t i = 0; i < 53; ++i) {
+        if (strcmp(morse, alphabet[i].morse) == 0)
+            return alphabet[i];
+    }
+    return alphabet[25]; // Z, my chosen error value
+}
+
 uint8_t set_bit8(uint8_t byte, uint8_t mask) {
     uint8_t set;
     set = byte | mask;
@@ -117,7 +126,7 @@ uint8_t get_mask8(uint8_t byte, uint8_t mask) {
 }
 
 
-static void printLetter(letter l) {
+void printLetter(letter l) {
     printf("%c, %u\n", l.c, l.length);
     for(size_t i = 0; i < l.length; i++) {
         printf("%d ", *((l.sequence)+i));
