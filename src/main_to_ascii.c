@@ -215,20 +215,19 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     if (dc_error_has_no_error(err)) {
         nread = dc_read(env, err, STDIN_FILENO, chars, BUF_SIZE);
     }
-    
     // dc_write(env, err, STDOUT_FILENO, chars, nread);
     // display("");
 
     constructStringBinary(env, err, chars, (size_t)nread, stringBinary);
-    dc_write(env, err, STDOUT_FILENO, stringBinary, strlen(stringBinary));
-    display("");
+    // dc_write(env, err, STDOUT_FILENO, stringBinary, strlen(stringBinary));
+    // display("");
 
     convertToMorse(env, err, stringBinary, morseMessage);
-    dc_write(env, err, STDOUT_FILENO, morseMessage, strlen(morseMessage));
-    display("");
+    // dc_write(env, err, STDOUT_FILENO, morseMessage, strlen(morseMessage));
+    // display("");
 
     convertToAscii(env, err, morseMessage, asciiMessage);
-    dc_write(env, err, STDOUT_FILENO, asciiMessage, strlen(asciiMessage) + 1);
+    dc_write(env, err, STDOUT_FILENO, asciiMessage, strlen(asciiMessage));
     display("");
 
     return ret_val;
@@ -272,7 +271,7 @@ static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err,
                 strcat(dest, " ");
             }
             else {
-                strcat(dest, "00"); // EOC
+                strcat(dest, "0"); // EOC. Internally make this a single 0 instead of 2 to make our lives easier later
             }
         }
         ++i;
@@ -280,7 +279,43 @@ static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err,
 }
 
 static void convertToAscii(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest) {
-    printLetter(getLetterByMorse("."));
+    size_t i = 0;
+    char morse[15] = "";
+    size_t morseLength = 0;
+    char c;
+    char prevC;
+
+    while ( *(input+i) ) {
+        
+        prevC = c;
+        c = *(input+i);
+
+        if ( c != '0' && c != ' ' ) {
+            morse[morseLength] = c;
+            ++morseLength;
+
+        } else if ( c == '0') {
+            if ( prevC == '0') {
+                return;
+            } else {
+                letter l = getLetterByMorse(morse);
+                // Concatenate *dest with new char. Need to initialize new char into array to do so
+                char arr[2] = {l.c, '\0'};
+                strcat(dest, arr);
+
+                // reset morse
+                morseLength = 0;
+                for (size_t i = 0; i < 15; ++i) {
+                    morse[i] = '\0';
+                }
+            }
+        }
+        else if ( c == ' ' ) {
+            strcat(dest, " ");
+        }
+
+        ++i;
+    }
 }
 
 static void error_reporter(const struct dc_error *err) {
@@ -294,3 +329,4 @@ static void trace_reporter(__attribute__((unused))  const struct dc_posix_env *e
                                                     size_t line_number) {
     fprintf(stdout, "TRACE: %s : %s : @ %zu\n", file_name, function_name, line_number);
 }
+
