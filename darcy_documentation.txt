@@ -1,0 +1,29 @@
+Alex Giasson A00982145
+Assignment 1 Morse-to-ASCII Documentation
+
+Programs:
+main_to_morse - Translates ASCII input to Morse
+main_to_ascii - Translates Morse input to ASCII
+
+Functionality:
+Each program will read in a line of input from STD_IN and write the translation to STD_OUT
+
+Morse protocol:
+00 - End of character
+01 - Morse dash
+10 - Morse dot
+11 - space character
+0000 - End of transmission
+
+DC_Libraries used:
+DC_Util
+DC_Application
+DC_Posix
+
+Basic flow of control per program:
+Read
+Intermediate convert
+Final convert
+Write
+
+No FSM used
