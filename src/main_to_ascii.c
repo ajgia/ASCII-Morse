@@ -219,12 +219,12 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     // display("");
 
     constructStringBinary(env, err, chars, (size_t)nread, stringBinary);
-    // dc_write(env, err, STDOUT_FILENO, stringBinary, strlen(stringBinary));
-    // display("");
+    dc_write(env, err, STDOUT_FILENO, stringBinary, strlen(stringBinary));
+    display("");
 
     convertToMorse(env, err, stringBinary, morseMessage);
-    // dc_write(env, err, STDOUT_FILENO, morseMessage, strlen(morseMessage));
-    // display("");
+    dc_write(env, err, STDOUT_FILENO, morseMessage, strlen(morseMessage));
+    display("");
 
     convertToAscii(env, err, morseMessage, asciiMessage);
     dc_write(env, err, STDOUT_FILENO, asciiMessage, strlen(asciiMessage));
@@ -280,7 +280,7 @@ static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err,
 
 static void convertToAscii(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest) {
     size_t i = 0;
-    char morse[15] = "";
+    char morse[16] = "";
     size_t morseLength = 0;
     char c;
     char prevC;
@@ -305,8 +305,8 @@ static void convertToAscii(const struct dc_posix_env *env, struct dc_error *err,
 
                 // reset morse
                 morseLength = 0;
-                for (size_t i = 0; i < 15; ++i) {
-                    morse[i] = '\0';
+                for (size_t j = 0; j < 16; ++j) {
+                    morse[j] = '\0';
                 }
             }
         }

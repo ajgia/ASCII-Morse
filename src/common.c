@@ -31,6 +31,7 @@ int display(const char *str)
 }
 
 letter getLetterByChar(char c) {
+    // Abusing ASCII order to find letters
     if ( isalpha(c) ) {
         int a = toupper(c) - 65;
         return alphabet[a];
@@ -39,69 +40,31 @@ letter getLetterByChar(char c) {
         return alphabet[a];
     } 
 
-    switch (c) {
-        case '&':
-            return alphabet[36];
-            break;
-        case '\'':
-            return alphabet[37];
-            break;
-        case '@':
-            return alphabet[38];
-            break;
-        case ')':
-            return alphabet[39];
-            break;
-        case '(':
-            return alphabet[40];
-            break;
-        case ':':
-            return alphabet[41];
-            break;
-        case ',':
-            return alphabet[42];
-            break;
-        case '=':
-            return alphabet[43];
-            break;
-        case '!':
-            return alphabet[44];
-            break;
-        case '.':
-            return alphabet[45];
-            break;
-        case '-':
-            return alphabet[46];
-            break;
-        case '%':
-            return alphabet[47];
-            break;
-        case '+':
-            return alphabet[48];
-            break;
-        case '\"':
-            return alphabet[49];
-            break;
-        case '\?':
-            return alphabet[50];
-            break;
-        case '/':
-            return alphabet[51];
-            break;
-        case '\n':
-            return alphabet[52];
-            break;
-        default:
-            return alphabet[25];
-            break;
+    // Punctuation is not in such a nice order. Need to search remaining alphabet array (after A-Z and 0-9)
+    for (size_t i = 36; i < 54; ++i) {
+        if ( alphabet[i].c == c)
+            return alphabet[i];
+        
     }
+    return alphabet[25]; // If not found, Z is encoded.
 }
 
 letter getLetterByMorse(char *morse) {
-    for (size_t i = 0; i < 53; ++i) {
-        if (strcmp(morse, alphabet[i].morse) == 0)
+    for (size_t i = 0; i < 54; ++i) {
+        if (strcmp(morse, alphabet[i].morse) == 0) {
+
+            // Special case. X and * have the same Morse value {0,1,1,0}
+            // Program would have to use context to choose which one to interpret as. Will not do so.
+            // Instead, everything will be 'X'. X is [23] in alphabet
+            if (alphabet[i].c == '*') {
+                i = 23;
+            }
+
             return alphabet[i];
+        }
+
     }
+    // If letter not found:
     return alphabet[25]; // Z, my chosen error value
 }
 
@@ -127,7 +90,7 @@ uint8_t get_mask8(uint8_t byte, uint8_t mask) {
 
 
 void printLetter(letter l) {
-    printf("%c, %u\n", l.c, l.length);
+    printf("%c, %zu\n", l.c, l.length);
     for(size_t i = 0; i < l.length; i++) {
         printf("%d ", *((l.sequence)+i));
     }

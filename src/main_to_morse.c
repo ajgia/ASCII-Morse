@@ -204,7 +204,7 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     char chars[BUF_SIZE];
     char *output;
     uint8_t *binary;
-    ssize_t nread;
+    ssize_t nread = 0;
 
 
     ret_val = EXIT_SUCCESS;
@@ -242,8 +242,8 @@ static void constructBinaryMorseRepresentation(const struct dc_posix_env *env, s
         if (*(input+i) != ' ') {
             letter l = getLetterByChar(*(input+i));
             // Translate dots and dashes of the char to 1s and 0s
-            for(size_t i = 0; i < l.length; i++) {
-                if (l.morse[i] == '.') 
+            for(size_t j = 0; j < l.length; j++) {
+                if (l.morse[j] == '.') 
                     strcat(dest, "10");
                 else 
                     strcat(dest, "01");
