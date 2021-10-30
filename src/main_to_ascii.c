@@ -297,7 +297,8 @@ static void convertToAscii(const struct dc_posix_env *env, struct dc_error *err,
         } else if ( c == '0') {
             if ( prevC == '0') {
                 return;
-            } else {
+            } 
+            else if (prevC != ' ') {
                 letter l = getLetterByMorse(morse);
                 // Concatenate *dest with new char. Need to initialize new char into array to do so
                 char arr[2] = {l.c, '\0'};
