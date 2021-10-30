@@ -227,6 +227,11 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     if (dc_error_has_no_error(err)) {
         nread = dc_read(env, err, STDIN_FILENO, chars, BUF_SIZE);
     }
+    
+    if (dc_error_has_error) {
+        error_reporter(err);
+        return EXIT_FAILURE;
+    }
     // dc_write(env, err, STDOUT_FILENO, chars, nread);
     // display("");
 
