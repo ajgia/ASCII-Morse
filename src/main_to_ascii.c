@@ -102,17 +102,29 @@ static void trace_reporter(const struct dc_posix_env *env,
 
 /**
  * Construct 0 and 1 string representation of binary input.
+ * @param env dc_env 
+ * @param err dc_err
+ * @param input a pointer to char input
+ * @param nread numBytes of input
+ * @param dest a pointer to memory to construct at
  */ 
 static void constructStringBinary(const struct dc_posix_env *env, struct dc_error *err, char *input, size_t nread, char *dest);
 
-
 /**
  * Converts a string of binary morse to dot/dash morse
+ * @param env dc_env
+ * @param err dc_err
+ * @param input a pointer to char input
+ * @param dest a pointer to memory to construct at
  */ 
 static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest);
 
 /**
  * Converts dot/dash morse to ASCII
+ * @param env dc_env
+ * @param err dc_err
+ * @param input a pointer to char input
+ * @param dest a pointer to memory to construct at
  */ 
 static void convertToAscii(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest);
 

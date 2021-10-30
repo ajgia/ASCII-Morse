@@ -102,14 +102,27 @@ static void trace_reporter(const struct dc_posix_env *env,
 
 /**
  * Constructs a string representation of binary Morse encoding from ASCII chars
+ * @param env dc_env 
+ * @param err dc_err
+ * @param input a pointer to char input
+ * @param nread numBytes of input
+ * @param dest a pointer to memory to construct at
  */ 
 static void constructBinaryMorseRepresentation(const struct dc_posix_env *env, struct dc_error *err, char *input, size_t nread, char *dest);
 /**
  * Constructs a real binary sequence from a Morse binary string representation
+ * @param env dc_env 
+ * @param err dc_err
+ * @param input a pointer to char input
+ * @param binary a pointer to memory to construct at
  */ 
 static void constructBinary(const struct dc_posix_env *env, struct dc_error *err, char *input, uint8_t *binary);
 /**
  * Writes binary sequence to STD_OUT
+ * @param env dc_env 
+ * @param err dc_err
+ * @param binary a pointer to binary input
+ * @param nread numBytes to write of input
  */ 
 static void writeToFile(const struct dc_posix_env *env, struct dc_error *err, uint8_t *binary, size_t numBytes);
 
