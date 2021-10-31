@@ -27,6 +27,7 @@
  *  along with dc_dump.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#define MAX_MORSE 20
 
 /**
  * Sets mask bit of byte argument 
@@ -63,7 +64,7 @@ int display(const char *str);
  */ 
 typedef struct letter {
     char c;
-    bool sequence[16];
+    bool sequence[MAX_MORSE];
     const char *morse;
     size_t length;
 } letter;
@@ -125,7 +126,7 @@ static letter alphabet[26 + 10 + 19] = {
 
     { .c = '-', .sequence = {0,1,1,1,1,0}, .morse = "-....-", .length = 6}, 
     { .c = '*', .sequence = {0,1,1,0}, .morse = "-..-", .length = 4},
-    { .c = '%', .sequence = {0,0,0,0,0,0,1,1,0,1,0,0,0,0,0}, .morse = "------..-.-----", .length = 15},
+    { .c = '%', .sequence = {0,0,0,0,0, 0,1,1,0,1, 0,0,0,0,0}, .morse = "------..-.-----", .length = 15},
     { .c = '+', .sequence = {1,0,1,0,1}, .morse = ".-.-.", .length = 5},
     { .c = '\"', .sequence = {1,0,1,1,0,1}, .morse = ".-..-.", .length = 6},
     { .c = '\?', .sequence = {1,1,0,0,1,1}, .morse = "..--..", .length = 6},

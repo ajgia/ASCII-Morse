@@ -297,7 +297,7 @@ static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err,
 
 static void convertToAscii(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest) {
     size_t i = 0;
-    char morse[16] = "";
+    char morse[MAX_MORSE] = "";
     size_t morseLength = 0;
     char c;
     char prevC;
@@ -323,7 +323,7 @@ static void convertToAscii(const struct dc_posix_env *env, struct dc_error *err,
 
                 // reset morse
                 morseLength = 0;
-                for (size_t j = 0; j < 16; ++j) {
+                for (size_t j = 0; j < MAX_MORSE; ++j) {
                     morse[j] = '\0';
                 }
             }
