@@ -233,8 +233,9 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
         return EXIT_FAILURE;
     }
 
-    // allocate maximum possible code length
-    output = (char*)calloc((nread*15 + nread*2 + 4 + 1), sizeof(char));
+    // allocate memory for maximum possible code length string
+    // sequences + EOCs + EOT + a nullbyte
+    output = (char*)calloc((nread*MAX_MORSE + nread*2 + 4 + 1), sizeof(char));
 
     constructBinaryMorseRepresentation(env, err, chars, (size_t)nread, output);
 

@@ -27,7 +27,8 @@
  *  along with dc_dump.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#define MAX_MORSE 20
+#define MAX_MORSE 16
+#define ALPHABET_LENGTH 55
 
 /**
  * Sets mask bit of byte argument 
@@ -73,7 +74,7 @@ typedef struct letter {
  * Array of all morse-supported letters
  * A-Z + 0-9 + punctuation
  */ 
-static letter alphabet[26 + 10 + 19] = {
+static letter alphabet[ALPHABET_LENGTH] = {
     { .c = 'A', .sequence = {1, 0}, .morse = ".-", .length = 2},
     { .c = 'B', .sequence = {0,1,1,1}, .morse = "-...", .length = 4},
     { .c = 'C', .sequence = {0,1,0,1}, .morse = "-.-.", .length = 4},
@@ -112,7 +113,6 @@ static letter alphabet[26 + 10 + 19] = {
     { .c = '8', .sequence = {0,0,0,1,1}, .morse = "---..", .length = 5},
     { .c = '9', .sequence = {0,0,0,0,1}, .morse = "----.", .length = 5},
 
-// Ommitted: Error punctuation.
     { .c = '&', .sequence = {1,0,1,1,1}, .morse = ".-...", .length = 5},
     { .c = '\'', .sequence = {1,0,0,0,0,1}, .morse = ".----.", .length = 6}, 
     { .c = '@', .sequence = {1,0,0,1,0,1}, .morse = ".--.-.", .length = 6},
@@ -132,7 +132,7 @@ static letter alphabet[26 + 10 + 19] = {
     { .c = '\?', .sequence = {1,1,0,0,1,1}, .morse = "..--..", .length = 6},
     { .c = '/', .sequence = {0,1,1,0,1}, .morse = "-..-.", .length = 5},
     { .c = '\n', .sequence = {1,0,1,0}, .morse = ".-.-", .length = 4},
-    { .c = '\\', .sequence = {1,1,1,1,1,1,1,1}, .morse = "........", .length = 8 }
+    { .c = '\\', .sequence = {1,1,1,1,1,1,1,1}, .morse = "........", .length = 8 } // Error value
 };
 
 /**

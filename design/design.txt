@@ -1,0 +1,68 @@
+Alex Giasson A00982145
+Assignment 1 Morse-to-ASCII Documentation
+
+High level approach:
+1. Make a letter struct containing each letter's information.
+    struct letter {
+        char c,
+        char* morse
+    }
+2. Make an array of them into an alphabet and functions to look them up both ways
+3. Convert input to ascii strings or bool arrays representing Morse binary
+4. Convert that Morse binary to actual binary
+
+Programs:
+main_to_morse - Translates ASCII input to Morse
+main_to_ascii - Translates Morse input to ASCII
+
+Functionality:
+Each program will read in a line of input from STD_IN and write the translation to STD_OUT
+Information about each letter of the alphabet will be stored in a struct: letter
+letter {
+    char c: ascii char representation
+    sequence: a boolean array of the morse representation
+    morse: a string literal of the morse representation (dots and dashes)
+    length: sequence length of the morse representation
+}
+
+Morse protocol:
+00 - End of character
+01 - Morse dash
+10 - Morse dot
+11 - space character
+0000 - End of transmission
+
+Protocol notes:
+1)  end of character + end of transmission (000000) will be read as simply end of transmission and cut off 2 00's.
+    Estimated impact: none.
+2) Multiplication symbol: 'x'. 'x' and 'X' have the same Morse values and traditionally were simply used interchangeably.
+    This program supports '*' as well by popular demand although it is not a traditionally supported character in Morse. All encode to 'X'. 
+    Estimated impact: minimal.
+3) The backslash character is supported. Unsupported characters encode to the backslash character '\' using the International Morse error code "........"
+    This character was chosen as it is not traditionally supported in Morse, so it should not be used in any other context but as an error.
+
+
+Reflection:
+    1) Protocol's morse-binary values (00, 01, 10, 11, 0000) should be centralized rather than repeated through functions as literals.
+        Next time, create a binValue struct for them, or an array, or just as globals or something.
+    2) I never ended up using the bool[] sequence member of the letter struct. I was going to work in that context but ended up working in a char context instead.
+        Making use of functions like strcmp, strcat, expedited the process considerably.
+    3) I attempted to use the FSM for this assignment, as an exercise, but ran into considerable issues.
+        First thought was state cycle of READ -> INTERMEDIATE CONVERT -> FINAL CONVERT -> Write
+        Issue 1: void* arg parameter of the fsm, which is used for passing data between states, has to be set when FSM is created. So can't read data in the first state, then put it into the void *
+        Issue 2: Changing the data passed between states through void* arg could be achieved by using double pointers. A regular pointer won't do because, although you can dereference that pointer and edit the data, you can't change the value of that pointer to something else entirely (pass by value). So a double pointer may let you pass the value of a pointer to a pointer, so that dereferencing that double pointer lets you change the pointer to point to something else. Thereby letting you change the void* arg from nothing, to ascii input, to intermediate conversion result, to final conversion.
+        Issue 2 proved too much to continue with FSM after setting it up.
+
+DC_Libraries used:
+DC_Util
+DC_Application
+DC_Posix
+
+Basic flow of control per program:
+Read
+Intermediate convert
+Final convert
+Write
+
+No FSM used
+

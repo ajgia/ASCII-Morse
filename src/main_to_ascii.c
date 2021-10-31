@@ -232,18 +232,11 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
         error_reporter(err);
         return EXIT_FAILURE;
     }
-    // dc_write(env, err, STDOUT_FILENO, chars, nread);
-    // display("");
 
     constructStringBinary(env, err, chars, (size_t)nread, stringBinary);
-    // dc_write(env, err, STDOUT_FILENO, stringBinary, strlen(stringBinary));
-    // display("");
-
     convertToMorse(env, err, stringBinary, morseMessage);
-    // dc_write(env, err, STDOUT_FILENO, morseMessage, strlen(morseMessage));
-    // display("");
-
     convertToAscii(env, err, morseMessage, asciiMessage);
+
     dc_write(env, err, STDOUT_FILENO, asciiMessage, strlen(asciiMessage));
     display("");
 

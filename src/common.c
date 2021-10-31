@@ -31,7 +31,7 @@ int display(const char *str)
 }
 
 letter getLetterByChar(char c) {
-    // Abusing ASCII order to find letters
+    // Abusing ASCII order to find letters faster
     if ( isalpha(c) ) {
         int a = toupper(c) - 65;
         return alphabet[a];
@@ -40,17 +40,17 @@ letter getLetterByChar(char c) {
         return alphabet[a];
     } 
 
-    // Punctuation is not in such a nice order. Need to search remaining alphabet array (after A-Z and 0-9)
-    for (size_t i = 36; i < 54; ++i) {
+    // Punctuation is not in such a nice order. Need to search alphabet array
+    for (size_t i = 0; i < ALPHABET_LENGTH; ++i) {
         if ( alphabet[i].c == c)
             return alphabet[i];
         
     }
-    return alphabet[54];    // If letter not found return '\', the protocol error value
+    return alphabet[ALPHABET_LENGTH - 1];    // If letter not found return last letter in alphabet '\', the protocol error value
 }
 
 letter getLetterByMorse(char *morse) {
-    for (size_t i = 0; i < 54; ++i) {
+    for (size_t i = 0; i < ALPHABET_LENGTH; ++i) {
         if (strcmp(morse, alphabet[i].morse) == 0) {
 
             // Special case. X and * have the same Morse value {0,1,1,0}
@@ -64,8 +64,8 @@ letter getLetterByMorse(char *morse) {
         }
 
     }
-    // If letter not found return '\', the protocol error value
-    return alphabet[54];
+    // If letter not found return last letter in alphabet '\', the protocol error value
+    return alphabet[ALPHABET_LENGTH - 1];
 }
 
 uint8_t set_bit8(uint8_t byte, uint8_t mask) {
