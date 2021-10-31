@@ -46,7 +46,7 @@ letter getLetterByChar(char c) {
             return alphabet[i];
         
     }
-    return alphabet[25]; // If not found, Z is encoded.
+    return alphabet[54];    // If letter not found return '\', the protocol error value
 }
 
 letter getLetterByMorse(char *morse) {
@@ -64,8 +64,8 @@ letter getLetterByMorse(char *morse) {
         }
 
     }
-    // If letter not found:
-    return alphabet[25]; // Z, my chosen error value
+    // If letter not found return '\', the protocol error value
+    return alphabet[54];
 }
 
 uint8_t set_bit8(uint8_t byte, uint8_t mask) {
