@@ -228,7 +228,7 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
         nread = dc_read(env, err, STDIN_FILENO, chars, BUF_SIZE);
     }
     
-    if (dc_error_has_error) {
+    if (dc_error_has_error(err)) {
         error_reporter(err);
         return EXIT_FAILURE;
     }
