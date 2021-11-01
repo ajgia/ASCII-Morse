@@ -256,7 +256,7 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
 
 static void constructBinaryMorseRepresentation(const struct dc_posix_env *env, struct dc_error *err, char *input, size_t nread, char *dest) {
     // Process each char in input
-    for (size_t i = 0; i < nread-1; i++) {
+    for (size_t i = 0; i < nread; i++) {
         // If not a space, get letter from alphabet
         if (*(input+i) != ' ') {
             letter l = getLetterByChar(*(input+i));
@@ -275,7 +275,7 @@ static void constructBinaryMorseRepresentation(const struct dc_posix_env *env, s
     }
     // EOT
     strcat(dest, "0000");
-    // printf("%s\n", dest);
+    // printf("%s", dest);
 }
 
 static void constructBinary(const struct dc_posix_env *env, struct dc_error *err, char *input, uint8_t *output) {
