@@ -238,7 +238,6 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     convertToAscii(env, err, morseMessage, asciiMessage);
 
     dc_write(env, err, STDOUT_FILENO, asciiMessage, strlen(asciiMessage));
-    display("");
 
     return ret_val;
 }
