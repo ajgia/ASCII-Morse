@@ -108,7 +108,7 @@ static void trace_reporter(const struct dc_posix_env *env,
  * @param nread numBytes of input
  * @param dest a pointer to memory to construct at
  */ 
-static void constructStringBinary(const struct dc_posix_env *env, struct dc_error *err, char *input, size_t nread, char *dest);
+static void constructStringBinary(uint8_t *input, size_t nread, char *dest);
 
 /**
  * Converts a string of binary morse to dot/dash morse
@@ -117,7 +117,7 @@ static void constructStringBinary(const struct dc_posix_env *env, struct dc_erro
  * @param input a pointer to char input
  * @param dest a pointer to memory to construct at
  */ 
-static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest);
+static void convertToMorse(char *input, char *dest);
 
 /**
  * Converts dot/dash morse to ASCII
@@ -126,7 +126,7 @@ static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err,
  * @param input a pointer to char input
  * @param dest a pointer to memory to construct at
  */ 
-static void convertToAscii(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest);
+static void convertToAscii(char *input, char *dest);
 
 /**
  * Main
@@ -154,7 +154,7 @@ int main(int argc, char * argv[])
 
 static struct dc_application_settings *create_settings(const struct dc_posix_env *env, struct dc_error *err)
 {
-    static bool default_verbose = false;
+    // static bool default_verbose = false;
     struct application_settings *settings;
 
     DC_TRACE(env);
@@ -215,7 +215,7 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     int ret_val;
     DC_TRACE(env);
     ssize_t nread = 0;
-    char chars[BUF_SIZE];
+    uint8_t chars[BUF_SIZE];
     char stringBinary[BUF_SIZE*8] = "";
     char morseMessage[BUF_SIZE*8] = "";
     char asciiMessage[BUF_SIZE*8] = "";
@@ -233,16 +233,16 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
         return EXIT_FAILURE;
     }
 
-    constructStringBinary(env, err, chars, (size_t)nread, stringBinary);
-    convertToMorse(env, err, stringBinary, morseMessage);
-    convertToAscii(env, err, morseMessage, asciiMessage);
+    constructStringBinary(chars, (size_t)nread, stringBinary);
+    convertToMorse(stringBinary, morseMessage);
+    convertToAscii(morseMessage, asciiMessage);
 
     dc_write(env, err, STDOUT_FILENO, asciiMessage, strlen(asciiMessage));
 
     return ret_val;
 }
 
-static void constructStringBinary(const struct dc_posix_env *env, struct dc_error *err, char *input, size_t nread, char *dest) {
+static void constructStringBinary(uint8_t *input, size_t nread, char *dest) {
     // loop each byte
     for (size_t i = 0; i < nread; ++i) {
 
@@ -256,7 +256,7 @@ static void constructStringBinary(const struct dc_posix_env *env, struct dc_erro
     }
 }
 
-static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest) {
+static void convertToMorse(char *input, char *dest) {
     // loop through *input 
     // remember *input ends in a null byte
     // store the previous char. if last char == 0 and thisChar == 0, then end of character.
@@ -287,7 +287,7 @@ static void convertToMorse(const struct dc_posix_env *env, struct dc_error *err,
     }
 }
 
-static void convertToAscii(const struct dc_posix_env *env, struct dc_error *err, char *input, char *dest) {
+static void convertToAscii(char *input, char *dest) {
     size_t i = 0;
     char morse[MAX_MORSE] = "";
     size_t morseLength = 0;
