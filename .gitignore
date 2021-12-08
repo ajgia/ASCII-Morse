@@ -2,6 +2,15 @@
 # Created by https://www.toptal.com/developers/gitignore/api/linux,macos,windows,intellij+all,visualstudiocode,visualstudio,emacs,cmake,valgrind
 # Edit at https://www.toptal.com/developers/gitignore?templates=linux,macos,windows,intellij+all,visualstudiocode,visualstudio,emacs,cmake,valgrind
 
+input.txt
+input2.txt
+
+/verify
+
+### Doxygen ###
+html/
+latex/
+
 ### CMake ###
 CMakeLists.txt.user
 CMakeCache.txt
